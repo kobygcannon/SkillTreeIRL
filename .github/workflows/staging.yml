@@ -49,8 +49,16 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
           EXPECTED_RELEASE: ${{ github.event.workflow_run.head_sha || github.sha }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_URL/health/live" --output live.json
+          test -n "$VERCEL_AUTOMATION_BYPASS_SECRET"
+          curl --fail --retry 5 --retry-delay 5 --header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" "$DEPLOYMENT_URL/health/live" --output live.json
           node -e 'const r=require("./live.json"); if(r.status!=="ok"||r.release!==process.env.EXPECTED_RELEASE) process.exit(1)'
-      - run: curl --fail --retry 5 --retry-delay 5 "${{ steps.deploy.outputs.url }}/health/ready"
-      - run: curl --fail --retry 5 --retry-delay 5 "${{ steps.deploy.outputs.url }}/sign-in"
+      - name: Verify staging readiness
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: curl --fail --retry 5 --retry-delay 5 --header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" "${{ steps.deploy.outputs.url }}/health/ready"
+      - name: Verify staging sign-in surface
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: curl --fail --retry 5 --retry-delay 5 --header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" "${{ steps.deploy.outputs.url }}/sign-in"

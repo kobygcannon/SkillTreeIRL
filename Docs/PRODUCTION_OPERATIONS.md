@@ -4,7 +4,7 @@
 
 Maintain separate Supabase and hosting projects for `staging` and `production`. Never share service keys, OAuth applications, Stripe webhook secrets, evidence buckets, or databases. Set `APP_ENV` and immutable `APP_RELEASE` in every deployment. Staging receives a release only after the application and clean-database quality jobs pass.
 
-Create protected GitHub environments named `staging` and `production`. Require a human reviewer for `production`. Each environment must define its own `VERCEL_TOKEN`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, and `SUPABASE_DB_PASSWORD`; production additionally defines `PRODUCTION_URL` for rollback verification. Environment-owned Vercel configuration contains the runtime variables from `.env.example`. Never put staging values in the production environment or vice versa.
+Create protected GitHub environments named `staging` and `production`. Require a human reviewer for `production`. Each environment must define its own `VERCEL_TOKEN`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, and `SUPABASE_DB_PASSWORD`; staging additionally defines `VERCEL_AUTOMATION_BYPASS_SECRET` for smoke-testing its SSO-protected Vercel deployment, and production defines `PRODUCTION_URL` for rollback verification. Environment-owned Vercel configuration contains the runtime variables from `.env.example`. Never put staging values in the production environment or vice versa.
 
 Configure every legal/controller variable documented in `.env.example` before public registration. In `APP_ENV=production`, `/health/ready` fails closed when the legal identity, controller, retention, lawful-basis, or error-monitoring configuration is missing.
 

@@ -24,7 +24,7 @@ This record maps the specification's production-readiness gate to current author
 
 These require inspected provider state. They must remain unchecked until dated evidence is recorded.
 
-- [ ] Protected `staging` and `production` GitHub environments exist, with a required production reviewer and separate secrets. The environments now exist, production requires `kobygcannon` approval and is restricted to `main`, and staging is restricted to `staging`; neither environment yet contains its required deployment secrets.
+- [ ] Protected `staging` and `production` GitHub environments exist, with a required production reviewer and separate secrets. The environments now exist, production requires `kobygcannon` approval and is restricted to `main`, and staging is restricted to `staging`; neither environment yet contains its required deployment secrets, including staging's Vercel automation-bypass credential.
 - [ ] A remote repository runs the green quality workflow for the release commit.
 - [ ] The staging workflow has applied migrations to a separate Supabase project and passed exact-release smoke checks on its Vercel deployment.
 - [x] Sentry production ingestion is configured with privacy scrubbing, release/environment metadata, source-map authorization, IP storage disabled, and a sanitized staging test event (`0a7293c84aba4350addeb26e9b348ec2`) observed on 13 August 2026.
