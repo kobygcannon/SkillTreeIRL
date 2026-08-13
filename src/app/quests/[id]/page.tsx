@@ -9,13 +9,15 @@ export default async function QuestDeepLink({
   const { id } = await params,
     supabase = await createClient();
   if (!supabase) redirect("/sign-in");
-  const [{ data }, { data: candidates }, { data: skills }] = await Promise.all([supabase
+  const [questResult, candidatesResult, skillsResult] = await Promise.all([supabase
     .from("quests")
     .select(
       "id,title,description,goal_id,status,xp_reward,due_at,priority,estimated_minutes,recurrence,evidence_required,pinned_at,goals(id,title),quest_skill_rewards(skill_id),quest_completions(completed_at,undone_at,activity_id),quest_subtasks(id,title,completed_at,sort_order),quest_dependencies(depends_on_quest_id,quests!quest_dependencies_depends_on_quest_id_fkey(title))",
     )
     .eq("id", id)
     .maybeSingle(), supabase.from("quests").select("id,title").neq("id", id).neq("status", "completed").order("title").limit(250),supabase.from("skills").select("id,name").is("archived_at",null).order("name").limit(250)]);
+  if(questResult.error||candidatesResult.error||skillsResult.error)throw new Error("Quest could not be loaded",{cause:questResult.error||candidatesResult.error||skillsResult.error});
+  const data=questResult.data,candidates=candidatesResult.data,skills=skillsResult.data;
   if (!data) notFound();
   const completion = (data.quest_completions || []).find(
     (item) => !item.undone_at,

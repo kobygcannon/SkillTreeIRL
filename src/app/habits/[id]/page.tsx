@@ -10,12 +10,14 @@ export default async function HabitDeepLink({
   const { id } = await params,
     supabase = await createClient();
   if (!supabase) redirect("/sign-in");
-  const [{ data }, { data: goals }, { data: skills }, { data: reminders }] = await Promise.all([
+  const [habitResult, goalsResult, skillsResult, remindersResult] = await Promise.all([
     supabase.from("habits").select("id,name,frequency,timezone,xp_reward,minimum_target,minimum_unit,goal_id,start_date,end_date,archived_at,goals(id,title),habit_occurrences(local_date,status,detail),habit_skill_links(skill_id)").eq("id", id).maybeSingle(),
     supabase.from("goals").select("id,title").in("status", ["active","focus","later","paused"]).order("title").limit(250),
     supabase.from("skills").select("id,name").is("archived_at", null).order("name").limit(250),
     supabase.from("reminders").select("next_run_at").eq("reminder_type", "habit").eq("entity_id", id).maybeSingle(),
   ]);
+  if(habitResult.error||goalsResult.error||skillsResult.error||remindersResult.error)throw new Error("Habit could not be loaded",{cause:habitResult.error||goalsResult.error||skillsResult.error||remindersResult.error});
+  const data=habitResult.data,goals=goalsResult.data,skills=skillsResult.data,reminders=remindersResult.data;
   if (!data) notFound();
   return (
     <ObjectPage

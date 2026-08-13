@@ -9,13 +9,14 @@ export default async function ActivityDeepLink({
   const { id } = await params,
     supabase = await createClient();
   if (!supabase) redirect("/sign-in");
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("activities")
     .select(
       "description,duration_minutes,quantity,unit,effort,confidence,private_note,occurred_at,reversed_at,activity_goal_links(goals(id,title)),activity_skill_links(xp_awarded,skills(id,name))",
     )
     .eq("id", id)
     .maybeSingle();
+  if (error) throw new Error("Activity could not be loaded", { cause: error });
   if (!data) notFound();
   return (
     <ObjectPage
