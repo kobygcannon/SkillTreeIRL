@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(27);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -17,6 +17,9 @@ select has_trigger('public','subscriptions','metric_subscription_lifecycle','sub
 select has_function('public','prepare_user_deletion',array['uuid'],'account deletion cleanup is versioned and callable by the service role');
 select ok(has_function_privilege('service_role','public.consume_rate_limit(text,integer,integer)','EXECUTE'),'service role can consume request rate limits');
 select ok(not has_function_privilege('authenticated','public.consume_rate_limit(text,integer,integer)','EXECUTE'),'users cannot bypass the request boundary to consume rate limits directly');
+select has_function('public','create_challenge',array['text','text','timestamp with time zone','timestamp with time zone','text','numeric','text','uuid[]'],'transactional challenge creation exists');
+select ok(has_function_privilege('authenticated','public.create_challenge(text,text,timestamptz,timestamptz,text,numeric,text,uuid[])','EXECUTE'),'signed-in users can create challenges transactionally');
+select ok(not has_function_privilege('anon','public.create_challenge(text,text,timestamptz,timestamptz,text,numeric,text,uuid[])','EXECUTE'),'anonymous users cannot create challenges');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
@@ -30,6 +33,8 @@ insert into public.challenges(id,creator_id,title,starts_at,ends_at,metric,targe
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
 select set_config('request.jwt.claim.sub','61000000-0000-0000-0000-000000000001',true);
+select lives_ok($$select public.create_challenge('Transactional challenge','All records commit together',now(),now()+interval '3 days','activities',2,'invite_only',array['62000000-0000-0000-0000-000000000002']::uuid[])$$,'challenge and memberships are created in one transaction');
+select is((select count(*) from public.challenge_members m join public.challenges c on c.id=m.challenge_id where c.title='Transactional challenge'),2::bigint,'creator and invitee memberships both exist');
 select lives_ok($$insert into public.challenge_members(challenge_id,user_id,status) values('65000000-0000-0000-0000-000000000001','63000000-0000-0000-0000-000000000003','invited')$$,'creator can invite a member');
 reset role;
 delete from public.challenge_members where challenge_id='65000000-0000-0000-0000-000000000001' and user_id='63000000-0000-0000-0000-000000000003';
