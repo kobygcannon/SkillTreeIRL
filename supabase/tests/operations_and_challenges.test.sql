@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(42);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -29,6 +29,12 @@ select ok(not has_function_privilege('anon','public.update_public_profile(jsonb)
 select has_function('public','cancel_evidence_upload',array['text'],'unused evidence reservations can be cancelled');
 select ok(has_function_privilege('authenticated','public.cancel_evidence_upload(text)','EXECUTE'),'signed-in users can cancel their unused upload reservations');
 select ok(not has_function_privilege('anon','public.cancel_evidence_upload(text)','EXECUTE'),'anonymous users cannot cancel evidence reservations');
+select has_function('public','update_support_ticket_admin',array['uuid','uuid','text','text','text'],'support updates are transactional');
+select ok(has_function_privilege('service_role','public.update_support_ticket_admin(uuid,uuid,text,text,text)','EXECUTE'),'service role can perform transactional support updates');
+select ok(not has_function_privilege('authenticated','public.update_support_ticket_admin(uuid,uuid,text,text,text)','EXECUTE'),'users cannot call admin support updates');
+select has_function('public','apply_moderation_action',array['uuid','uuid','text','text'],'moderation actions are transactional');
+select ok(has_function_privilege('service_role','public.apply_moderation_action(uuid,uuid,text,text)','EXECUTE'),'service role can perform transactional moderation');
+select ok(not has_function_privilege('authenticated','public.apply_moderation_action(uuid,uuid,text,text)','EXECUTE'),'users cannot call admin moderation actions');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
