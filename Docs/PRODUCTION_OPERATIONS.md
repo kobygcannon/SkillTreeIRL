@@ -16,16 +16,16 @@ Set `ERROR_MONITOR_URL` to an HTTPS production ingestion endpoint and `ERROR_MON
 
 ## Backups and restore
 
-Enable Supabase automatic daily backups for both environments and point-in-time recovery for production. Evidence lives in the private `evidence` bucket; enable the provider's storage durability/versioning policy and keep source evidence private during recovery.
+Enable Supabase automatic daily database backups for both environments and point-in-time recovery for production. These backups contain Storage metadata but not evidence object bytes. Supabase's S3-compatible Storage does not expose bucket versioning, so copy the private `evidence` bucket to an independent encrypted backup destination on a scheduled retention policy. Use credentials that can read only that bucket, encrypt in transit and at rest, alert on failed or unexpectedly small copies, and keep recovery access separate from the application runtime.
 
 Monthly restore test:
 
-1. Record backup ID, production release, and migration head.
-2. Restore into a new isolated recovery project—not production.
+1. Record database backup ID, evidence backup ID, production release, and migration head.
+2. Restore the database and matching evidence-object copy into a new isolated recovery project—not production.
 3. Rotate/resynchronise database credentials after physical restore.
 4. Apply any later backward-compatible migrations.
 5. run `/health/ready`, the hostile RLS suite, and sampled owner/isolation checks.
-6. Verify evidence objects can be signed by their owners and cannot be read by another account.
+6. Reconcile Storage metadata against restored object keys, then verify evidence objects can be signed by their owners and cannot be read by another account.
 7. Record recovery point, recovery time, row-count reconciliation, evidence sample results, tester, and date in `Docs/restore-tests/`.
 8. Destroy the recovery project and revoke temporary credentials.
 
