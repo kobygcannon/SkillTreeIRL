@@ -408,6 +408,8 @@ export default function AuthenticatedQuickAdd({
           title: form.get("title") || null,
           body: form.get("body"),
           mood: form.get("mood") || null,
+          goalId: form.get("journalGoalId") || null,
+          skillId: form.get("journalSkillId") || null,
         },
         "Reflection saved privately.",
       );
@@ -777,6 +779,11 @@ export default function AuthenticatedQuickAdd({
                   Mood
                   <input name="mood" maxLength={40} />
                 </label>
+                <div className="form-row">
+                  <label>Related goal<select name="journalGoalId"><option value="">General day</option>{goals.map(goal=><option value={goal.id} key={goal.id}>{goal.title}</option>)}</select></label>
+                  <label>Related skill<select name="journalSkillId"><option value="">No skill</option>{skills.map(skill=><option value={skill.id} key={skill.id}>{skill.name}</option>)}</select></label>
+                </div>
+                <small>Formatting: # heading, - list, **bold**, *emphasis*, and [label](https://link).</small>
               </>
             )}
             {error && (

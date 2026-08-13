@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { parseCsv } from "@/lib/csv";
+import JournalBody from "@/components/journal-body";
 
 type Journal = {
   id: string;
@@ -242,7 +243,8 @@ export default function Tools() {
                     {entry.mood ? ` · ${entry.mood}` : ""}
                   </small>
                   <h3>{entry.title || "Reflection"}</h3>
-                  <p>{entry.body}</p>
+                  <JournalBody body={entry.body} />
+                  <Link href={`/journal/${entry.id}`}>Open reflection</Link>
                   <button
                     className="outline"
                     onClick={() => deleteJournal(entry.id)}

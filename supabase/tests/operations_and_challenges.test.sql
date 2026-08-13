@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(42);
+select plan(45);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -35,6 +35,9 @@ select ok(not has_function_privilege('authenticated','public.update_support_tick
 select has_function('public','apply_moderation_action',array['uuid','uuid','text','text'],'moderation actions are transactional');
 select ok(has_function_privilege('service_role','public.apply_moderation_action(uuid,uuid,text,text)','EXECUTE'),'service role can perform transactional moderation');
 select ok(not has_function_privilege('authenticated','public.apply_moderation_action(uuid,uuid,text,text)','EXECUTE'),'users cannot call admin moderation actions');
+select has_column('public','journal_entries','goal_id','journal entries can relate to goals');
+select has_column('public','journal_entries','activity_id','journal entries can relate to activities');
+select has_column('public','journal_entries','skill_id','journal entries can relate to skills');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
