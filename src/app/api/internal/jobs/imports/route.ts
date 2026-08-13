@@ -52,10 +52,22 @@ async function run(request: Request) {
   let processed = 0;
   for (const job of jobs || []) {
     if (job.attempts >= job.max_attempts) {
-      await admin
+      const { error: deadError } = await admin
         .from("background_jobs")
         .update({ status: "dead" })
         .eq("id", job.id);
+      await reportProductionError({
+        message: "Import job exhausted all retry attempts",
+        source: "job",
+        route: "import-worker",
+        severity: "fatal",
+        fingerprint: "dead-letter-import",
+        context: {
+          jobId: job.id,
+          attempts: job.attempts,
+          stateUpdateFailed: deadError?.message || null,
+        },
+      });
       continue;
     }
     const attempt = job.attempts + 1;
@@ -76,6 +88,11 @@ async function run(request: Request) {
         message: claimError.message,
         source: "job",
         route: "import-worker",
+        severity: attempt >= job.max_attempts ? "fatal" : "error",
+        fingerprint:
+          attempt >= job.max_attempts
+            ? "dead-letter-import"
+            : "import-worker-retry",
         context: { jobId: job.id, stage: "claim" },
       });
       continue;

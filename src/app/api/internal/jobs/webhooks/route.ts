@@ -120,6 +120,10 @@ async function run(request: Request) {
         stack: error instanceof Error ? error.stack : undefined,
         source: "provider",
         route: "webhook-worker",
+        severity: dead ? "fatal" : "error",
+        fingerprint: dead
+          ? "dead-letter-webhook"
+          : "webhook-delivery-retry",
         context: {
           deliveryId: delivery.id,
           attempts: attempt,

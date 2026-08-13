@@ -3,6 +3,7 @@ import { authenticated, failure } from "@/domains/shared/http";
 import { userCan } from "@/domains/entitlements/service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/security/tokens";
+import { reportProductionError } from "@/lib/monitoring";
 type GitHubEvent = {
   id: string;
   type: string;
@@ -87,7 +88,19 @@ export async function POST(
         cache: "no-store",
       },
     );
-    if (!response.ok)
+    if (!response.ok) {
+      await auth.supabase
+        .from("integrations")
+        .update({ status: "degraded", error_code: `GITHUB_HTTP_${response.status}` })
+        .eq("id", id);
+      await reportProductionError({
+        message: "GitHub integration provider is degraded",
+        source: "provider",
+        route: "integration-sync",
+        severity: "error",
+        fingerprint: "provider-degradation-github",
+        context: { provider: "github", status: response.status, integrationId: id },
+      });
       return NextResponse.json(
         {
           error: {
@@ -97,6 +110,7 @@ export async function POST(
         },
         { status: 502 },
       );
+    }
     const events = (await response.json()) as GitHubEvent[];
     let processed = 0,
       failed = 0;
@@ -125,11 +139,19 @@ export async function POST(
       .update({
         last_synced_at: new Date().toISOString(),
         error_code: failed ? "PARTIAL_IMPORT" : null,
-      status: "connected",
+        status: failed ? "degraded" : "connected",
       })
       .eq("id", id);
     if (updateError) throw updateError;
-    if (failed)
+    if (failed) {
+      await reportProductionError({
+        message: "GitHub integration imported only part of the provider response",
+        source: "provider",
+        route: "integration-sync",
+        severity: "error",
+        fingerprint: "provider-degradation-github",
+        context: { provider: "github", processed, failed, integrationId: id },
+      });
       return NextResponse.json(
         {
           error: {
@@ -140,6 +162,7 @@ export async function POST(
         },
         { status: 502 },
       );
+    }
     return NextResponse.json({
       data: { processed, failed, total: events.length },
     });
