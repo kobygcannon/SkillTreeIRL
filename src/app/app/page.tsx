@@ -8,7 +8,7 @@ const pages=new Set<Page>(["today","goals","skills","quests","habits","achieveme
 const goalFilters=new Set<GoalFilter>(["active","later","completed","archived"]);
 
 export default async function AuthenticatedApp({searchParams}:{searchParams:Promise<{view?:string;filter?:string}>}) {
-  const supabase=await createClient(); if(!supabase)redirect("/?mode=demo");
+  const supabase=await createClient(); if(!supabase)redirect("/sign-in?error=not_configured");
   const {data:userResult}=await supabase.auth.getUser(); if(!userResult.user)redirect("/sign-in");
   const {data:assurance}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel(); if(assurance?.currentLevel==="aal1"&&assurance.nextLevel==="aal2")redirect("/mfa");
   const [{data:preferenceResult},params]=await Promise.all([supabase.from("user_preferences").select("locale,theme").single(),searchParams]);
