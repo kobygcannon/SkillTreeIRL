@@ -3,6 +3,7 @@
 import { FileUp, Link as LinkIcon, LoaderCircle, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient as createBrowserSupabase } from "@/lib/supabase/client";
+import { cancelEvidenceUpload } from "@/lib/evidence/upload";
 
 type Evidence = {
   id: string;
@@ -59,6 +60,7 @@ export default function ActivityEvidenceManager({
       if (!(file instanceof File && file.size) && !url && !textNote)
         throw new Error("Choose a file, secure link, or evidence note.");
       const attachments: Array<Record<string, unknown>> = [];
+      let pendingFilePath = "";
       if (file instanceof File && file.size) {
         if (!navigator.onLine)
           throw new Error("File evidence needs an internet connection.");
@@ -72,15 +74,21 @@ export default function ActivityEvidenceManager({
           throw new Error(
             reserved.error?.message || "Evidence upload could not start.",
           );
+        pendingFilePath = reserved.data.path;
         const storage = createBrowserSupabase();
-        if (!storage) throw new Error("Evidence storage is not configured.");
+        if (!storage) {
+          await cancelEvidenceUpload(pendingFilePath);
+          throw new Error("Evidence storage is not configured.");
+        }
         const { error: uploadError } = await storage.storage
           .from("evidence")
           .uploadToSignedUrl(reserved.data.path, reserved.data.token, file, {
             contentType: file.type,
           });
-        if (uploadError)
+        if (uploadError) {
+          await cancelEvidenceUpload(pendingFilePath);
           throw new Error("The evidence file could not be uploaded.");
+        }
         attachments.push({
           type:
             file.type === "application/pdf"
@@ -94,19 +102,30 @@ export default function ActivityEvidenceManager({
       if (url) attachments.push({ type: "url", externalUrl: url });
       if (textNote) attachments.push({ type: "text", textNote });
       for (const attachment of attachments) {
-        const response = await fetch(
-          `/api/v1/activities/${activityId}/evidence`,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(attachment),
-          },
-        );
+        let response: Response;
+        try {
+          response = await fetch(
+            `/api/v1/activities/${activityId}/evidence`,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(attachment),
+            },
+          );
+        } catch (error) {
+          if (attachment.storagePath)
+            await cancelEvidenceUpload(pendingFilePath);
+          throw error;
+        }
         const body = await response.json().catch(() => ({}));
-        if (!response.ok)
+        if (!response.ok) {
+          if (attachment.storagePath)
+            await cancelEvidenceUpload(pendingFilePath);
           throw new Error(
             body.error?.message || "Evidence could not be attached.",
           );
+        }
+        if (attachment.storagePath) pendingFilePath = "";
       }
       (
         document.getElementById(`evidence-${activityId}`) as HTMLFormElement

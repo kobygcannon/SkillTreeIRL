@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { resilientFetch } from "@/lib/offline/queue";
 import { createClient as createBrowserSupabase } from "@/lib/supabase/client";
+import { cancelEvidenceUpload } from "@/lib/evidence/upload";
 
 type Option = {
   id: string;
@@ -116,6 +117,7 @@ export default function AuthenticatedQuickAdd({
       url = String(form.get("evidenceUrl") || "").trim(),
       textNote = String(form.get("evidenceText") || "").trim();
     const attachments: Array<Record<string, unknown>> = [];
+    let pendingFilePath = "";
     if (file instanceof File && file.size > 0) {
       if (!navigator.onLine)
         throw new Error(
@@ -132,20 +134,25 @@ export default function AuthenticatedQuickAdd({
           reserved.error?.message ||
             "The activity was saved, but the evidence upload could not start.",
         );
+      pendingFilePath = reserved.data.path;
       const storage = createBrowserSupabase();
-      if (!storage)
+      if (!storage) {
+        await cancelEvidenceUpload(pendingFilePath);
         throw new Error(
           "The activity was saved, but evidence storage is not configured.",
         );
+      }
       const { error: uploadError } = await storage.storage
         .from("evidence")
         .uploadToSignedUrl(reserved.data.path, reserved.data.token, file, {
           contentType: file.type,
         });
-      if (uploadError)
+      if (uploadError) {
+        await cancelEvidenceUpload(pendingFilePath);
         throw new Error(
           "The activity was saved, but the evidence file could not be uploaded.",
         );
+      }
       attachments.push({
         type:
           file.type === "application/pdf"
@@ -159,18 +166,27 @@ export default function AuthenticatedQuickAdd({
     if (url) attachments.push({ type: "url", externalUrl: url });
     if (textNote) attachments.push({ type: "text", textNote });
     for (const attachment of attachments) {
-      const response = await globalThis.fetch(
-        `/api/v1/activities/${activityId}/evidence`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(attachment),
-        },
-      );
-      if (!response.ok)
+      let response: Response;
+      try {
+        response = await globalThis.fetch(
+          `/api/v1/activities/${activityId}/evidence`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(attachment),
+          },
+        );
+      } catch (error) {
+        if (attachment.storagePath) await cancelEvidenceUpload(pendingFilePath);
+        throw error;
+      }
+      if (!response.ok) {
+        if (attachment.storagePath) await cancelEvidenceUpload(pendingFilePath);
         throw new Error(
           "The activity was saved, but some evidence could not be attached. Open the activity from History to try again.",
         );
+      }
+      if (attachment.storagePath) pendingFilePath = "";
     }
   };
   const prepareQuestEvidence = async (form: FormData) => {
@@ -190,14 +206,21 @@ export default function AuthenticatedQuickAdd({
         throw new Error(
           reserved.error?.message || "Evidence upload could not start.",
         );
+      const storagePath = reserved.data.path as string;
       const storage = createBrowserSupabase();
-      if (!storage) throw new Error("Evidence storage is not configured.");
+      if (!storage) {
+        await cancelEvidenceUpload(storagePath);
+        throw new Error("Evidence storage is not configured.");
+      }
       const { error } = await storage.storage
         .from("evidence")
         .uploadToSignedUrl(reserved.data.path, reserved.data.token, file, {
           contentType: file.type,
         });
-      if (error) throw new Error("Evidence could not be uploaded.");
+      if (error) {
+        await cancelEvidenceUpload(storagePath);
+        throw new Error("Evidence could not be uploaded.");
+      }
       return {
         evidenceType:
           file.type === "application/pdf"
@@ -205,7 +228,7 @@ export default function AuthenticatedQuickAdd({
             : file.type === "text/plain"
               ? "text"
               : "image",
-        storagePath: reserved.data.path,
+        storagePath,
       };
     }
     if (externalUrl) return { evidenceType: "url", externalUrl };
@@ -291,12 +314,44 @@ export default function AuthenticatedQuickAdd({
       setError("");
       try {
         const evidence = await prepareQuestEvidence(form);
-        return await send(
-          `/api/v1/quests/${String(form.get("questId"))}/complete`,
-          evidence,
-          "Quest completed with authoritative XP and private evidence.",
-          { idempotent: true },
-        );
+        if (!evidence.storagePath)
+          return await send(
+            `/api/v1/quests/${String(form.get("questId"))}/complete`,
+            evidence,
+            "Quest completed with authoritative XP and private evidence.",
+            { idempotent: true },
+          );
+        let response: Response;
+        try {
+          response = await globalThis.fetch(
+            `/api/v1/quests/${String(form.get("questId"))}/complete`,
+            {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                "idempotency-key": crypto.randomUUID(),
+              },
+              body: JSON.stringify(evidence),
+            },
+          );
+        } catch {
+          await cancelEvidenceUpload(evidence.storagePath);
+          throw new Error(
+            "Quest completion could not be confirmed, so the private upload was removed. Try again.",
+          );
+        }
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          await cancelEvidenceUpload(evidence.storagePath);
+          throw new Error(
+            payload.error?.message ||
+              "Quest completion was not confirmed, so the private upload was removed. Try again.",
+          );
+        }
+        onSuccess("Quest completed with authoritative XP and private evidence.");
+        close();
+        setTimeout(() => location.reload(), 500);
+        return;
       } catch (error) {
         setError(
           error instanceof Error
