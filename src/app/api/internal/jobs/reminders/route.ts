@@ -6,6 +6,7 @@ import { failure } from "@/domains/shared/http";
 import { reportProductionError } from "@/lib/monitoring";
 import { isValidTimeZone } from "@/lib/i18n";
 import { sendReminderEmails } from "@/lib/notifications/email";
+import { monitorScheduledJob } from "@/lib/monitoring/scheduled-job";
 
 type QuietHours = { start?: string; end?: string };
 function quietNow(quiet: QuietHours, timezone: string, now: Date) {
@@ -22,7 +23,7 @@ function quietNow(quiet: QuietHours, timezone: string, now: Date) {
     : time >= quiet.start || time < quiet.end;
 }
 
-export async function POST(request: Request) {
+async function run(request: Request) {
   try {
     const expected = process.env.CRON_SECRET;
     if (
@@ -281,5 +282,10 @@ export async function POST(request: Request) {
   } catch (error) {
     return failure(error);
   }
+}
+export function POST(request: Request) {
+  return monitorScheduledJob("skilltree-reminders", "0 6 * * *", () =>
+    run(request),
+  );
 }
 export const GET = POST;

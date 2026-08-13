@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { reportProductionError } from "@/lib/monitoring";
-export async function POST(request: Request) {
+import { monitorScheduledJob } from "@/lib/monitoring/scheduled-job";
+async function run(request: Request) {
   if (
     !process.env.CRON_SECRET ||
     request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
@@ -134,5 +135,10 @@ export async function POST(request: Request) {
   return NextResponse.json({
     data: { jobs: (jobs || []).length, rowsProcessed: processed },
   });
+}
+export function POST(request: Request) {
+  return monitorScheduledJob("skilltree-imports", "10 6 * * *", () =>
+    run(request),
+  );
 }
 export const GET = POST;

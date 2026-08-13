@@ -4,8 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/security/tokens";
 import { reportProductionError } from "@/lib/monitoring";
 import { assertPublicHttpsUrl } from "@/lib/security/outbound-url";
-export { POST as GET };
-export async function POST(request: Request) {
+import { monitorScheduledJob } from "@/lib/monitoring/scheduled-job";
+async function run(request: Request) {
   const expected = process.env.CRON_SECRET,
     provided = request.headers.get("authorization");
   if (!expected || provided !== `Bearer ${expected}`)
@@ -139,3 +139,9 @@ export async function POST(request: Request) {
     },
   });
 }
+export function POST(request: Request) {
+  return monitorScheduledJob("skilltree-webhooks", "20 6 * * *", () =>
+    run(request),
+  );
+}
+export const GET = POST;
