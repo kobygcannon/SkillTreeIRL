@@ -1,6 +1,61 @@
-import {NextResponse} from "next/server";
-import {authenticated} from "@/domains/shared/http";
-import {userCan} from "@/domains/entitlements/service";
-import {createAdminClient} from "@/lib/supabase/admin";
-import {hashToken,randomToken} from "@/lib/security/tokens";
-export async function POST(){const auth=await authenticated();if("error" in auth)return auth.error;if(!await userCan(auth.userId,"integrations"))return NextResponse.json({error:{code:"PRO_REQUIRED",message:"Connected integrations are available with SkillTree Pro."}},{status:403});const clientId=process.env.GITHUB_CLIENT_ID,appUrl=process.env.NEXT_PUBLIC_APP_URL,admin=createAdminClient();if(!clientId||!appUrl||!admin)return NextResponse.json({error:{code:"INTEGRATION_NOT_CONFIGURED",message:"GitHub integration is not configured"}},{status:503});const state=randomToken("ghs_",24);await admin.from("oauth_states").insert({user_id:auth.userId,provider:"github",state_hash:hashToken(state),redirect_to:"/app",expires_at:new Date(Date.now()+10*60000).toISOString()});const target=new URL("https://github.com/login/oauth/authorize");target.searchParams.set("client_id",clientId);target.searchParams.set("redirect_uri",`${appUrl}/api/v1/integrations/github/callback`);target.searchParams.set("scope","read:user repo");target.searchParams.set("state",state);return NextResponse.json({data:{url:target.toString()}})}
+import { NextResponse } from "next/server";
+import { authenticated } from "@/domains/shared/http";
+import { userCan } from "@/domains/entitlements/service";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { hashToken, randomToken } from "@/lib/security/tokens";
+export async function POST() {
+  const auth = await authenticated();
+  if ("error" in auth) return auth.error;
+  if (!(await userCan(auth.userId, "integrations")))
+    return NextResponse.json(
+      {
+        error: {
+          code: "PRO_REQUIRED",
+          message: "Connected integrations are available with SkillTree Pro.",
+        },
+      },
+      { status: 403 },
+    );
+  const clientId = process.env.GITHUB_CLIENT_ID,
+    appUrl = process.env.NEXT_PUBLIC_APP_URL,
+    admin = createAdminClient();
+  if (!clientId || !appUrl || !admin)
+    return NextResponse.json(
+      {
+        error: {
+          code: "INTEGRATION_NOT_CONFIGURED",
+          message: "GitHub integration is not configured",
+        },
+      },
+      { status: 503 },
+    );
+  const state = randomToken("ghs_", 24);
+  const { error } = await admin
+    .from("oauth_states")
+    .insert({
+      user_id: auth.userId,
+      provider: "github",
+      state_hash: hashToken(state),
+      redirect_to: "/app",
+      expires_at: new Date(Date.now() + 10 * 60000).toISOString(),
+    });
+  if (error)
+    return NextResponse.json(
+      {
+        error: {
+          code: "INTEGRATION_STATE_FAILED",
+          message: "GitHub connection could not start",
+        },
+      },
+      { status: 500 },
+    );
+  const target = new URL("https://github.com/login/oauth/authorize");
+  target.searchParams.set("client_id", clientId);
+  target.searchParams.set(
+    "redirect_uri",
+    `${appUrl}/api/v1/integrations/github/callback`,
+  );
+  target.searchParams.set("scope", "read:user");
+  target.searchParams.set("state", state);
+  return NextResponse.json({ data: { url: target.toString() } });
+}
