@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(33);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -23,6 +23,9 @@ select ok(not has_function_privilege('anon','public.create_challenge(text,text,t
 select has_function('public','update_account_preferences',array['jsonb','jsonb'],'transactional account preference updates exist');
 select ok(has_function_privilege('authenticated','public.update_account_preferences(jsonb,jsonb)','EXECUTE'),'signed-in users can update account preferences transactionally');
 select ok(not has_function_privilege('anon','public.update_account_preferences(jsonb,jsonb)','EXECUTE'),'anonymous users cannot update account preferences');
+select has_function('public','update_public_profile',array['jsonb'],'transactional public profile updates exist');
+select ok(has_function_privilege('authenticated','public.update_public_profile(jsonb)','EXECUTE'),'signed-in users can update public profiles transactionally');
+select ok(not has_function_privilege('anon','public.update_public_profile(jsonb)','EXECUTE'),'anonymous users cannot update public profiles');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
