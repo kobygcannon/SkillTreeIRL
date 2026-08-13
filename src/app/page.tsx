@@ -110,6 +110,7 @@ function goalProgressText(goal: GoalItem) {
 export type Quest = {
   id: string;
   title: string;
+  goalId: string | null;
   goal: string;
   xp: number;
   due: string;
@@ -212,6 +213,7 @@ const questsSeed: Quest[] = [
   {
     id: "q1",
     title: "Polish the onboarding flow",
+    goalId: "g1",
     goal: "Build & launch SkillTree",
     xp: 50,
     due: "Today",
@@ -223,6 +225,7 @@ const questsSeed: Quest[] = [
   {
     id: "q2",
     title: "Complete an easy 7 km run",
+    goalId: "g2",
     goal: "Run a comfortable 10K",
     xp: 50,
     due: "Today",
@@ -234,6 +237,7 @@ const questsSeed: Quest[] = [
   {
     id: "q3",
     title: "Review August spending",
+    goalId: "g3",
     goal: "Build an emergency fund",
     xp: 25,
     due: "Tomorrow",
@@ -245,6 +249,7 @@ const questsSeed: Quest[] = [
   {
     id: "q4",
     title: "Finish chapter 8",
+    goalId: "g4",
     goal: "Read 24 books this year",
     xp: 10,
     due: "Sat",
@@ -1532,6 +1537,7 @@ function GoalDetail({
   locale: string;
 }) {
   const pct = goalPercent(goal);
+  const goalQuests = quests.filter((quest) => quest.goalId === goal.id).slice(0, 3);
   return (
     <>
       <div className="detail-head">
@@ -1580,7 +1586,7 @@ function GoalDetail({
           </div>
           <SectionHead title="Next actions" action="View plan" />
           <div className="task-card">
-            {quests.slice(0, 3).map((q) => (
+            {goalQuests.map((q) => (
               <Task
                 key={q.id}
                 done={q.done}
@@ -1589,6 +1595,9 @@ function GoalDetail({
                 onClick={() => onQuest(q.id)}
               />
             ))}
+            {!goalQuests.length && (
+              <p className="modal-tip">No next actions are linked to this goal yet.</p>
+            )}
           </div>
         </div>
         {authenticated ? (
