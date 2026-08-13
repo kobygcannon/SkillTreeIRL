@@ -10,7 +10,7 @@ This record maps the specification's production-readiness gate to current author
 - Authorization and RLS are hostile-tested: `supabase/tests/authorization_rls.test.sql` and the full clean-database suite pass.
 - Goal measurement types, revisions, state changes, progress, reversals, skills, XP, quests, habits, achievements, evidence, entitlements, Stripe idempotency, exports, deletion, privacy defaults, notification preferences, offline idempotency, and large-account behavior are exercised by the 130-assertion database suite plus the authenticated browser journey.
 - Responsive/public/accessibility behavior: seven Playwright journeys pass, including authenticated and public axe checks; static accessibility tests also pass.
-- Clean database: all migrations through `20260813040000_account_deletion_immutable_ledgers.sql` apply from zero and database lint reports no warnings.
+- Clean database: the last isolated reset applied migrations through `20260813040000_account_deletion_immutable_ledgers.sql` and database lint reported no warnings. Later migrations through `20260813220000_transactional_admin_actions.sql` are installed in both provider environments and have passed targeted privilege verification, but the full clean-reset suite for the new head remains pending while GitHub Actions billing prevents jobs from starting.
 - Application quality: 94 unit/static tests, ESLint, strict TypeScript, and the optimized 95-route Next.js build pass.
 - No mock authentication or client-only authorization is used by the signed-in product. `/demo` is intentionally read-only and routes attempted mutations to signup.
 - Legal, privacy, security, and support surfaces exist. Production readiness fails closed unless controller, monitoring, email, web-push, and request-protection configuration are complete.
@@ -19,6 +19,8 @@ This record maps the specification's production-readiness gate to current author
 - Release workflows apply migrations, preserve the tested commit SHA as `APP_RELEASE`, verify the deployed release, and smoke-test live, ready, and sign-in surfaces.
 - Rollback is executable through `.github/workflows/rollback.yml` and verifies both health and the expected immutable release.
 - A local isolated logical restore drill passed with reconciled core row counts; see `Docs/restore-tests/2026-08-13-local-preproduction.md`.
+- Failed evidence uploads now release their quota reservations and remove unattached private objects; activity and quest attachment flows compensate safely without deleting evidence that was already committed.
+- Support updates and moderation actions commit their record change, private note/content action, and audit event atomically. The database re-authorizes the administrator and exposes these functions only to the service role.
 
 ## Provider-backed launch gates — not yet evidenced
 
@@ -40,12 +42,12 @@ Do not mark SkillTree IRL production-ready or open public registration until eve
 
 ## Current production readiness probe
 
-At release `a05bba06c26e1b2404f85e44e987ec97182267cd` on 13 August 2026, Vercel production completed successfully and `/health/live` returned healthy with the exact release. The production readiness probe verified database connectivity, request protection, Sentry monitoring, Resend email delivery, and VAPID browser push. It remains intentionally unavailable because legal/controller configuration and verified live Stripe billing are incomplete. The protected staging alias redirects unauthenticated requests to Vercel SSO; exact-release staging smoke evidence must come from the configured automation bypass after GitHub billing is restored.
+At release `caa0f82199c73812ec6c8c51606e3883f7b4831c` on 13 August 2026, Vercel production completed successfully and `/health/live` returned HTTP 200 with the exact release. `/health/ready` returned HTTP 503 with database, request protection, Sentry monitoring, Resend email delivery, and VAPID browser push healthy; configuration/legal and billing were false. The probe therefore remains intentionally unavailable because legal/controller configuration and verified live Stripe billing are incomplete. The protected staging alias redirects unauthenticated requests to Vercel SSO; exact-release staging smoke evidence must come from the configured automation bypass after GitHub billing is restored.
 
 ## Provider configuration evidence - 13 August 2026
 
 - Separate Supabase production (`ieoadeumyqjfujgtvjvl`) and staging (`ioivxuszgqzetieyokul`) projects contain the full schema. RLS is enabled across public customer tables. Trigger-only `SECURITY DEFINER` functions no longer inherit client execution permission; the provider security advisor no longer reports the public-execution findings.
-- Vercel production and Preview use separate Supabase projects and environment metadata. `skill-tree-irl-staging.vercel.app` is bound to the `staging` branch as a stable protected Preview alias. Production deployed release `a05bba0`; staging remains protected by Vercel SSO and has a dedicated automation bypass for release workflows.
+- Vercel production and Preview use separate Supabase projects and environment metadata. `skill-tree-irl-staging.vercel.app` is bound to the `staging` branch as a stable protected Preview alias. Production deployed release `caa0f82`; staging remains protected by Vercel SSO and has a dedicated automation bypass for release workflows.
 - Resend uses the verified `send.fentuvo.com` domain with separate domain-scoped, sending-only API keys for production and staging.
 - Web Push uses a generated VAPID keypair stored in Vercel secrets and is reported healthy by production readiness.
 - Stripe sandbox contains `SkillTree IRL Pro` at GBP 7.99/month, an isolated restricted staging key, and an active staging webhook destination using the latest stable webhook API version. It listens for checkout completion, subscription create/update/delete/pause/resume, invoice paid, and invoice payment failure. Production billing remains disabled until Stripe business verification and live-mode product/key/webhook setup are complete.
