@@ -17,6 +17,7 @@ export default function CommandPalette({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const searchable = query.trim().length >= 2;
 
   useEffect(() => {
@@ -24,12 +25,20 @@ export default function CommandPalette({
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setLoading(true);
+      setFailed(false);
       fetch(`/api/v1/search?q=${encodeURIComponent(query)}`, {
         signal: controller.signal,
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) throw new Error("Search failed");
+          return response.json();
+        })
         .then((body) => setResults(body.data || []))
-        .catch(() => {})
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setResults([]);
+          setFailed(true);
+        })
         .finally(() => setLoading(false));
     }, 200);
     return () => {
@@ -94,7 +103,12 @@ export default function CommandPalette({
           ))}
         </div>
         {searchable && loading && <p className="modal-tip">Searching…</p>}
-        {searchable && !loading && !visibleResults.length && (
+        {searchable && !loading && failed && (
+          <p className="form-error" role="alert">
+            Search is temporarily unavailable. Your saved SkillTree is unaffected.
+          </p>
+        )}
+        {searchable && !loading && !failed && !visibleResults.length && (
           <p className="modal-tip">No matching records.</p>
         )}
       </div>

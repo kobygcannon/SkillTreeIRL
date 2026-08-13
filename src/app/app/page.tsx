@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SkillTreeApp, type GoalFilter, type GoalItem, type Habit, type Page, type Quest, type Skill } from "../page";
 import { levelProgress } from "@/domains/xp/level";
+import { isAuthenticationServiceUnavailable } from "@/lib/supabase/auth-error";
 
 const colors: Record<string,string>={Business:"#7c6cf2",Health:"#e48253",Fitness:"#e48253",Finance:"#44a77a",Learning:"#ca9d42",Technology:"#5c73da"};
 const pages=new Set<Page>(["today","goals","skills","quests","habits","achievements","history","insights","season","profile","settings","calendar"]);
@@ -9,7 +10,7 @@ const goalFilters=new Set<GoalFilter>(["active","later","completed","archived"])
 
 export default async function AuthenticatedApp({searchParams}:{searchParams:Promise<{view?:string;filter?:string}>}) {
   const supabase=await createClient(); if(!supabase)redirect("/sign-in?error=not_configured");
-  const {data:userResult,error:userError}=await supabase.auth.getUser();if(userError)throw new Error("Your session could not be verified",{cause:userError});if(!userResult.user)redirect("/sign-in");
+  const {data:userResult,error:userError}=await supabase.auth.getUser();if(userError&&isAuthenticationServiceUnavailable(userError))throw new Error("Your session could not be verified",{cause:userError});if(!userResult.user)redirect("/sign-in");
   const {data:assurance,error:assuranceError}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();if(assuranceError)throw new Error("Your sign-in assurance could not be verified",{cause:assuranceError});if(assurance?.currentLevel==="aal1"&&assurance.nextLevel==="aal2")redirect("/mfa");
   const [{data:preferenceResult,error:preferenceError},params]=await Promise.all([supabase.from("user_preferences").select("locale,theme").single(),searchParams]);
   if(preferenceError)throw new Error("Account preferences could not be loaded",{cause:preferenceError});
