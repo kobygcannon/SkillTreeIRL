@@ -3,6 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { parseCsv } from "@/lib/csv";
 
@@ -37,6 +38,24 @@ type Notice = {
 };
 type CsvRow = Record<string, string>;
 
+function ToolsFrame({ children }: { children: ReactNode }) {
+  return (
+    <main className="onboard">
+      <header>
+        <Link href="/app" className="onboard-logo">SkillTree IRL</Link>
+        <Link href="/app">Back to app</Link>
+      </header>
+      <section><div className="onboard-card"><p className="kicker">TOOLS & RECORDS</p><h1>Your wider SkillTree</h1>{children}</div></section>
+    </main>
+  );
+}
+
+async function readData(path: string) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`Request failed with ${response.status}`);
+  return response.json();
+}
+
 export default function Tools() {
   const [journal, setJournal] = useState<Journal[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -47,31 +66,35 @@ export default function Tools() {
     filename: string;
     rows: CsvRow[];
   } | null>(null);
-  const [message, setMessage] = useState("");
-  const load = () =>
-    Promise.all([
-      fetch("/api/v1/journal").then((response) => response.json()),
-      fetch("/api/v1/integrations").then((response) => response.json()),
-      fetch("/api/v1/imports").then((response) => response.json()),
-      fetch("/api/v1/notifications").then((response) => response.json()),
+  const [message, setMessage] = useState(""),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false);
+  const load = () => {
+    setLoading(true);
+    return Promise.all([
+      readData("/api/v1/journal"),
+      readData("/api/v1/integrations"),
+      readData("/api/v1/imports"),
+      readData("/api/v1/notifications"),
     ]).then(([journalBody, integrationBody, importBody, noticeBody]) => {
       setJournal(journalBody.data || []);
       setIntegrations(integrationBody.data || []);
       setImports(importBody.data || []);
       setNotices(noticeBody.data || []);
-    });
+      setFailed(false);
+    }).catch(()=>setFailed(true)).finally(()=>setLoading(false));
+  };
   useEffect(() => {
     Promise.all([
-      fetch("/api/v1/journal").then((response) => response.json()),
-      fetch("/api/v1/integrations").then((response) => response.json()),
-      fetch("/api/v1/imports").then((response) => response.json()),
-      fetch("/api/v1/notifications").then((response) => response.json()),
+      readData("/api/v1/journal"),
+      readData("/api/v1/integrations"),
+      readData("/api/v1/imports"),
+      readData("/api/v1/notifications"),
     ]).then(([journalBody, integrationBody, importBody, noticeBody]) => {
       setJournal(journalBody.data || []);
       setIntegrations(integrationBody.data || []);
       setImports(importBody.data || []);
       setNotices(noticeBody.data || []);
-    });
+      setFailed(false);
+    }).catch(()=>setFailed(true)).finally(()=>setLoading(false));
   }, []);
   const addJournal = async (form: FormData) => {
     const response = await fetch("/api/v1/journal", {
@@ -175,6 +198,8 @@ export default function Tools() {
     );
     load();
   };
+  if(loading)return <ToolsFrame><div className="empty" role="status"><h2>Loading your records…</h2><p>Journal entries, imports, notifications, and integrations are being retrieved securely.</p></div></ToolsFrame>;
+  if(failed)return <ToolsFrame><div className="empty" role="alert"><h2>Your records are temporarily unavailable</h2><p>Your data has not been removed. Check your connection and try again.</p><button className="primary" onClick={load}>Try again</button></div></ToolsFrame>;
   return (
     <main className="onboard">
       <header>
