@@ -29,7 +29,7 @@ These require inspected provider state. They must remain unchecked until dated e
 - [ ] The staging workflow has applied migrations to a separate Supabase project and passed exact-release smoke checks on its Vercel deployment.
 - [x] Sentry production ingestion is configured with privacy scrubbing, release/environment metadata, source-map authorization, IP storage disabled, and a sanitized staging test event (`0a7293c84aba4350addeb26e9b348ec2`) observed on 13 August 2026.
 - [x] Sentry production uptime monitors cover `/health/live` and `/health/ready`; issue email delivery is enabled, and reminders, imports, and webhook workers emit scheduled check-ins with failure and recovery thresholds.
-- [ ] A dedicated sustained-5xx metric alert and explicit dead-letter/provider-degradation alerts exist in addition to the readiness and worker monitors.
+- [x] A production error-volume monitor creates a medium issue above 3 unresolved errors/hour and a high-priority issue above 10. Dead-letter imports/webhooks and provider degradation emit stable severity-tagged Sentry fingerprints connected to the project email alert.
 - [ ] Automatic daily database backups are enabled in staging and production; production point-in-time recovery is enabled.
 - [ ] The private evidence bucket's provider durability/versioning/retention configuration is recorded.
 - [ ] A provider backup has been restored to an isolated recovery project and validated for RPO, RTO, row counts, hostile RLS, owner/cross-owner evidence access, and cleanup.
