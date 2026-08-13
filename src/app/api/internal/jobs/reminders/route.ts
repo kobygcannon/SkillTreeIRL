@@ -3,9 +3,10 @@ import webpush from "web-push";
 import {createAdminClient} from "@/lib/supabase/admin";
 import {failure} from "@/domains/shared/http";
 import {reportProductionError} from "@/lib/monitoring";
+import {isValidTimeZone} from "@/lib/i18n";
 
 type QuietHours={start?:string;end?:string};
-function quietNow(quiet:QuietHours,timezone:string,now:Date){if(!quiet.start||!quiet.end)return false;const parts=new Intl.DateTimeFormat("en-GB",{timeZone:timezone,hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(now),time=`${parts.find(part=>part.type==="hour")?.value}:${parts.find(part=>part.type==="minute")?.value}`;return quiet.start<=quiet.end?time>=quiet.start&&time<quiet.end:time>=quiet.start||time<quiet.end}
+function quietNow(quiet:QuietHours,timezone:string,now:Date){if(!quiet.start||!quiet.end)return false;const parts=new Intl.DateTimeFormat("en-GB",{timeZone:isValidTimeZone(timezone)?timezone:"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(now),time=`${parts.find(part=>part.type==="hour")?.value}:${parts.find(part=>part.type==="minute")?.value}`;return quiet.start<=quiet.end?time>=quiet.start&&time<quiet.end:time>=quiet.start||time<quiet.end}
 
 export async function POST(request:Request){
  try{
