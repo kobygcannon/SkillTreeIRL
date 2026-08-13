@@ -1,0 +1,2 @@
+import {cookies} from "next/headers";import {redirect} from "next/navigation";import {createClient} from "@/lib/supabase/server";import Onboarding from "./wizard";
+export default async function OnboardingPage(){const supabase=await createClient();if(!supabase)redirect("/sign-in?error=not_configured");const {data}=await supabase.auth.getUser();if(!data.user)redirect("/sign-in");const code=(await cookies()).get("skilltree_referral")?.value;if(code)await supabase.rpc("claim_referral",{p_code:code});return <Onboarding/>}

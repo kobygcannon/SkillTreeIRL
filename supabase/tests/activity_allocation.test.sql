@@ -1,0 +1,12 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(5);
+insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values('71000000-0000-0000-0000-000000000001','allocation@example.test','',now(),'{}');
+insert into public.skills(id,user_id,name) values('71100000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000001','First allocation'),('71100000-0000-0000-0000-000000000002','71000000-0000-0000-0000-000000000001','Second allocation');
+set local role authenticated;select set_config('request.jwt.claim.sub','71000000-0000-0000-0000-000000000001',true);select set_config('request.jwt.claim.role','authenticated',true);
+select lives_ok($$select public.log_activity('Normalized activity',now(),null,null,null,'moderate','{}','[{"skillId":"71100000-0000-0000-0000-000000000001","weight":1},{"skillId":"71100000-0000-0000-0000-000000000002","weight":1}]',null,'allocation-normalized')$$,'multiple client weights are normalized');
+select is((select sum(amount)::integer from public.xp_transactions where reason='Activity: Normalized activity'),25,'total XP cannot exceed the authoritative activity award');
+select is((select count(*)::integer from public.activity_skill_links),2,'both selected skills remain linked');
+select throws_ok($$select public.log_activity('Duplicate allocation',now(),null,null,null,'moderate','{}','[{"skillId":"71100000-0000-0000-0000-000000000001","weight":0.5},{"skillId":"71100000-0000-0000-0000-000000000001","weight":0.5}]',null,'allocation-duplicate')$$,'P0001','INVALID_SKILL_ALLOCATION','duplicate skill allocations are rejected');
+select throws_ok($$select public.log_activity('Negative quantity',now(),null,-1,'km','moderate','{}','[]',null,'allocation-negative')$$,'P0001','INVALID_QUANTITY','invalid quantities are rejected at the transaction boundary');
+select * from finish();rollback;

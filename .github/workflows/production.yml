@@ -1,0 +1,56 @@
+name: Promote tested release to production
+on:
+  workflow_run:
+    workflows: ["Deploy staging and smoke test"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+
+jobs:
+  production:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: skilltree-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.16.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - uses: supabase/setup-cli@v1
+        with: { version: 2.112.0 }
+      - run: pnpm install --frozen-lockfile
+      - name: Apply backward-compatible production migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+          supabase db push --linked --include-all --password "$SUPABASE_DB_PASSWORD"
+      - run: pnpm dlx vercel@50.15.1 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: pnpm dlx vercel@50.15.1 build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          APP_ENV: production
+          APP_RELEASE: ${{ github.event.workflow_run.head_sha }}
+          NEXT_PUBLIC_APP_ENV: production
+          NEXT_PUBLIC_APP_RELEASE: ${{ github.event.workflow_run.head_sha }}
+          SENTRY_ENVIRONMENT: production
+          SENTRY_RELEASE: ${{ github.event.workflow_run.head_sha }}
+      - id: deploy
+        run: echo "url=$(pnpm dlx vercel@50.15.1 deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})" >> "$GITHUB_OUTPUT"
+      - name: Verify the exact production release
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+          EXPECTED_RELEASE: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_URL/health/live" --output live.json
+          node -e 'const r=require("./live.json"); if(r.status!=="ok"||r.release!==process.env.EXPECTED_RELEASE) process.exit(1)'
+      - run: curl --fail --retry 5 --retry-delay 5 "${{ steps.deploy.outputs.url }}/health/ready"
+      - run: curl --fail --retry 5 --retry-delay 5 "${{ steps.deploy.outputs.url }}/sign-in"

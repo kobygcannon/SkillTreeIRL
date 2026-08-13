@@ -1,0 +1,3 @@
+import type {MetadataRoute} from "next";
+const routes=["/","/features","/skilltree","/goals","/pricing","/examples","/privacy","/security","/terms","/support","/sign-in","/start-free","/learn/goal-tracking","/learn/skill-development","/learn/real-life-rpg","/learn/personal-skill-tree","/learn/habit-progression","/learn/life-goals","/learn/progress-tracking"];
+export default function sitemap():MetadataRoute.Sitemap{const base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000";return routes.map((route,index)=>({url:new URL(route,base).toString(),lastModified:new Date(),changeFrequency:index===0?"weekly":"monthly",priority:index===0?1:index<7?.8:.5}))}

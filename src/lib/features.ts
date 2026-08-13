@@ -1,0 +1,4 @@
+import {createHash} from "node:crypto";
+import {createAdminClient} from "@/lib/supabase/admin";
+type Rules={environments?:string[];accounts?:string[];percentage?:number};
+export async function userFeatures(userId:string){const admin=createAdminClient();if(!admin)return{};const {data}=await admin.from("feature_flags").select("key,enabled,rules");const environment=process.env.APP_ENV||process.env.NODE_ENV||"development",bucket=parseInt(createHash("sha256").update(userId).digest("hex").slice(0,8),16)%100;return Object.fromEntries((data||[]).map(flag=>{const rules=(flag.rules||{}) as Rules,environmentAllowed=!rules.environments?.length||rules.environments.includes(environment),accountAllowed=rules.accounts?.includes(userId),percentage=Math.max(0,Math.min(100,Number(rules.percentage??100))),rollout=accountAllowed||bucket<percentage;return[flag.key,Boolean(flag.enabled&&environmentAllowed&&rollout)]}))}

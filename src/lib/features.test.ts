@@ -1,0 +1,2 @@
+import {describe,expect,it} from "vitest";import {readFileSync} from "node:fs";import {join} from "node:path";
+describe("feature rollout safeguards",()=>{const source=readFileSync(join(process.cwd(),"src","lib","features.ts"),"utf8");it("supports environment, account, and deterministic percentage targeting",()=>{expect(source).toContain("environments");expect(source).toContain("accounts");expect(source).toContain("sha256");expect(source).toContain("percentage")})});

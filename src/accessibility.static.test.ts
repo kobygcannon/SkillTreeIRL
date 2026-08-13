@@ -1,0 +1,9 @@
+import {describe,expect,it} from "vitest";import {readdirSync,readFileSync,statSync} from "node:fs";import {join} from "node:path";
+const root=join(process.cwd(),"src"),files=(directory:string):string[]=>readdirSync(directory).flatMap(name=>{const path=join(directory,name);return statSync(path).isDirectory()?files(path):path.endsWith(".tsx")?[path]:[]}),sources=files(root).map(path=>({path,source:readFileSync(path,"utf8")}));
+describe("static accessibility safeguards",()=>{
+ it("gives every modal an accessible dialog contract",()=>{const offenders=sources.flatMap(file=>[...file.source.matchAll(/<div className="quick-modal"([^>]*)>/g)].filter(match=>!match[1].includes('role="dialog"')||!match[1].includes('aria-modal="true"')).map(()=>file.path));expect(offenders).toEqual([])});
+ it("names icon-only controls",()=>{const offenders=sources.flatMap(file=>[...file.source.matchAll(/className="icon-btn"/g)].filter(match=>{const start=file.source.lastIndexOf("<button",match.index);const end=file.source.indexOf("</button>",match.index);return start<0||end<0||!file.source.slice(start,end).includes("aria-label=")}).map(()=>file.path));expect(offenders).toEqual([])});
+ it("does not emulate buttons with clickable generic divs",()=>{const offenders=sources.filter(file=>/<div[^>]+onClick=/.test(file.source)).map(file=>file.path);expect(offenders).toEqual([])});
+ it("requires alternative text for raster images",()=>{const offenders=sources.flatMap(file=>[...file.source.matchAll(/<img([^>]*)>/g)].filter(match=>!match[1].includes("alt=")).map(()=>file.path));expect(offenders).toEqual([])});
+ it("keeps keyboard focus and reduced-motion fallbacks",()=>{const css=readFileSync(join(root,"app","globals.css"),"utf8");expect(css).toContain(":focus-visible");expect(css).toContain("prefers-reduced-motion:reduce");expect(css).toContain("min-height:44px")});
+});

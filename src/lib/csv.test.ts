@@ -1,0 +1,2 @@
+import {describe,expect,it} from "vitest";import {parseCsv} from "./csv";
+describe("parseCsv",()=>{it("maps headers and rows",()=>expect(parseCsv("description,durationMinutes\nRun,30")).toEqual([{description:"Run",durationMinutes:"30"}]));it("supports quoted commas and escaped quotes",()=>expect(parseCsv('description,note\n"Run, easy","said ""done"""')).toEqual([{description:"Run, easy",note:'said "done"'}]));it("handles CRLF and missing cells",()=>expect(parseCsv("a,b\r\n1\r\n")).toEqual([{a:"1",b:""}]))})

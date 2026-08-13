@@ -1,0 +1,12 @@
+"use client";
+import Link from "next/link";
+import {useRouter} from "next/navigation";
+import {useEffect,useState} from "react";
+type Suggestion={id:string;title:string;description:string|null;estimated_minutes:number|null;goals:{title:string}|null};
+export default function SuggestedQuests(){
+ const router=useRouter(),[items,setItems]=useState<Suggestion[]>([]),[editing,setEditing]=useState<string|null>(null),[titles,setTitles]=useState<Record<string,string>>({}),[message,setMessage]=useState("");
+ useEffect(()=>{fetch("/api/v1/quest-suggestions").then(r=>r.ok?r.json():{data:[]}).then(body=>{setItems(body.data||[]);setTitles(Object.fromEntries((body.data||[]).map((item:Suggestion)=>[item.id,item.title])))})},[]);
+ const decide=async(item:Suggestion,action:"accept"|"dismiss")=>{setMessage("");const response=await fetch("/api/v1/quest-suggestions",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:item.id,action,title:titles[item.id]})}),body=await response.json().catch(()=>({}));if(!response.ok){setMessage(body.error?.message||"The suggestion could not be updated.");return}setItems(values=>values.filter(value=>value.id!==item.id));setMessage(action==="dismiss"?"Suggestion dismissed. It will not be added to your plan.":"Suggestion accepted as a planned quest.");if(action==="accept"&&body.data?.questId)router.push(`/quests/${body.data.questId}`)};
+ if(!items.length&&!message)return null;
+ return <section><div className="section-head"><h2>Suggested quests</h2><Link href="/templates">Browse templates</Link></div>{message&&<p role="status" className="modal-tip">{message}</p>}<div className="goal-list">{items.map(item=><article className="card side-card" key={item.id}><small>{item.goals?.title||"Independent goal"}{item.estimated_minutes?` · about ${item.estimated_minutes} minutes`:""}</small>{editing===item.id?<label className="real-form">Edit before accepting<input maxLength={180} value={titles[item.id]||""} onChange={event=>setTitles({...titles,[item.id]:event.target.value})}/></label>:<h3>{item.title}</h3>}<p>{item.description}</p><div className="form-actions"><button className="primary" disabled={!titles[item.id]?.trim()} onClick={()=>decide(item,"accept")}>Accept</button><button className="outline" onClick={()=>setEditing(editing===item.id?null:item.id)}>{editing===item.id?"Done editing":"Edit"}</button><button className="outline" onClick={()=>decide(item,"dismiss")}>Dismiss</button></div></article>)}</div></section>;
+}

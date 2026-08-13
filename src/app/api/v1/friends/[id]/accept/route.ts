@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {authenticated,failure} from "@/domains/shared/http";
+export async function POST(_request:Request,{params}:{params:Promise<{id:string}>}){const auth=await authenticated();if("error" in auth)return auth.error;const {id}=await params;const {error}=await auth.supabase.rpc("accept_friendship",{p_friendship_id:id});if(error)return failure(error);return NextResponse.json({data:{accepted:true}})}

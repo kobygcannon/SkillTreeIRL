@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";
+export async function GET(request:Request,{params}:{params:Promise<{code:string}>}){const {code}=await params;if(!/^[A-Za-z0-9_-]{8,32}$/.test(code))return NextResponse.redirect(new URL("/sign-in?mode=signup",request.url));const response=NextResponse.redirect(new URL("/sign-in?mode=signup",request.url));response.cookies.set("skilltree_referral",code,{path:"/",maxAge:30*86400,httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production"});return response}

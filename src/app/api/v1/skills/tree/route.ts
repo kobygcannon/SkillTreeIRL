@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {authenticated,failure} from "@/domains/shared/http";import {levelProgress} from "@/domains/xp/level";
+export async function GET(){const auth=await authenticated();if("error" in auth)return auth.error;const {data,error}=await auth.supabase.from("skill_xp_totals").select("skill_id,name,category,parent_id,discovered_at,lifetime_xp,recent_xp,lifetime_activities").order("name");if(error)return failure(error);return NextResponse.json({data:(data||[]).map(s=>({...s,...levelProgress(Number(s.lifetime_xp))}))})}

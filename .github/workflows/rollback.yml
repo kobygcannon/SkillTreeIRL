@@ -1,0 +1,50 @@
+name: Roll back production application
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: Previous immutable Vercel deployment URL or ID
+        required: true
+        type: string
+      expected_release:
+        description: APP_RELEASE expected after rollback
+        required: true
+        type: string
+      reason:
+        description: Incident or rollback reason
+        required: true
+        type: string
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: skilltree-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.16.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dlx vercel@50.15.1 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Promote the selected immutable deployment
+        run: pnpm dlx vercel@50.15.1 rollback "${{ inputs.deployment }}" --yes --timeout 5m --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify rollback health and release
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          EXPECTED_RELEASE: ${{ inputs.expected_release }}
+        run: |
+          curl --fail --retry 8 --retry-delay 5 "$PRODUCTION_URL/health/live" --output live.json
+          node -e 'const r=require("./live.json"); if(r.status!=="ok"||r.release!==process.env.EXPECTED_RELEASE) process.exit(1)'
+          curl --fail --retry 5 --retry-delay 5 "$PRODUCTION_URL/health/ready"
+      - name: Record rollback summary
+        run: |
+          echo "### Production rollback completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deployment: ${{ inputs.deployment }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Expected release: ${{ inputs.expected_release }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Reason: ${{ inputs.reason }}" >> "$GITHUB_STEP_SUMMARY"

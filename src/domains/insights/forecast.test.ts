@@ -1,0 +1,3 @@
+import {describe,expect,it} from "vitest";
+import {completionForecast} from "./forecast";
+describe("completion forecasts",()=>{const now=new Date("2026-08-13T12:00:00Z");it("requires sufficient history",()=>expect(completionForecast({current:2,target:10,now,events:[{delta:1,occurredAt:"2026-08-10T12:00:00Z"}]})).toBeNull());it("returns a range from recent and long-term pace",()=>{const forecast=completionForecast({current:6,target:12,now,unit:"modules",events:[{delta:2,occurredAt:"2026-07-20T12:00:00Z"},{delta:1,occurredAt:"2026-08-05T12:00:00Z"},{delta:3,occurredAt:"2026-08-12T12:00:00Z"}]});expect(forecast).not.toBeNull();expect(forecast!.to.getTime()).toBeGreaterThanOrEqual(forecast!.from.getTime());expect(forecast!.samples).toBe(3)})});

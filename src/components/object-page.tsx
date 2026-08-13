@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function ObjectPage({eyebrow,title,subtitle,children}:{eyebrow:string;title:string;subtitle?:string|null;children:React.ReactNode}){return <main className="onboard"><header><Link href="/app" className="onboard-logo">SkillTree IRL</Link><Link href="/app">Back to app</Link></header><section><div className="onboard-card"><p className="kicker">{eyebrow}</p><h1>{title}</h1>{subtitle&&<p>{subtitle}</p>}{children}</div></section></main>}

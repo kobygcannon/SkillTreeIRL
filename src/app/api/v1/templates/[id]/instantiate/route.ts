@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server";
+import {authenticated,failure} from "@/domains/shared/http";
+export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){try{const auth=await authenticated();if("error" in auth)return auth.error;const {id}=await params;const body=await request.json().catch(()=>({})) as {selectedSkills?:string[]};const {data,error}=await auth.supabase.rpc("instantiate_template",{p_template_id:id,p_selected_skills:body.selectedSkills||null});if(error)return failure(error);return NextResponse.json({data},{status:201})}catch(error){return failure(error)}}

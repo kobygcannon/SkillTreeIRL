@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {authorizedAdmin} from "@/lib/admin";
+export async function GET(){const auth=await authorizedAdmin(["support","admin","superadmin"]);if("error" in auth)return auth.error;const {data,error}=await auth.admin.from("support_tickets").select("id,user_id,subject,message,category,diagnostic_context,status,priority,assigned_to,created_at,updated_at").order("created_at",{ascending:false}).limit(200);if(error)return NextResponse.json({error:{code:"DATABASE_ERROR"}},{status:500});return NextResponse.json({data})}

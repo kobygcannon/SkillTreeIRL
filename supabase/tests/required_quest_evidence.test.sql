@@ -1,0 +1,14 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(5);
+insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values('72000000-0000-0000-0000-000000000001','quest-evidence@example.test','',now(),'{}');
+insert into public.skills(id,user_id,name) values('72100000-0000-0000-0000-000000000001','72000000-0000-0000-0000-000000000001','Verified quest skill');
+insert into public.quests(id,user_id,title,evidence_required,xp_reward) values('72200000-0000-0000-0000-000000000001','72000000-0000-0000-0000-000000000001','Evidence quest',true,25);
+insert into public.quest_skill_rewards(quest_id,skill_id,user_id,xp) values('72200000-0000-0000-0000-000000000001','72100000-0000-0000-0000-000000000001','72000000-0000-0000-0000-000000000001',25);
+set local role authenticated;select set_config('request.jwt.claim.sub','72000000-0000-0000-0000-000000000001',true);select set_config('request.jwt.claim.role','authenticated',true);
+select throws_ok($$select public.complete_quest('72200000-0000-0000-0000-000000000001','required-without')$$,'P0001','EVIDENCE_REQUIRED','required evidence cannot be bypassed through the legacy completion function');
+select lives_ok($$select public.complete_quest_with_evidence('72200000-0000-0000-0000-000000000001','required-with-text','text',null,null,'Completion note')$$,'required evidence can complete atomically');
+select is((select confidence from public.activities where description='Evidence quest'),'evidence_attached','the generated activity records evidence confidence');
+select is((select count(*)::integer from public.activity_evidence where text_note='Completion note'),1,'private evidence is attached to the generated activity');
+select is((select count(*)::integer from public.xp_transactions where confidence_level='evidence_attached'),1,'quest XP retains evidence confidence');
+select * from finish();rollback;

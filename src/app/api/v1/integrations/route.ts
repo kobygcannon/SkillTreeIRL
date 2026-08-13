@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {authenticated,failure} from "@/domains/shared/http";
+export async function GET(){const auth=await authenticated();if("error" in auth)return auth.error;const {data,error}=await auth.supabase.from("integrations").select("id,provider,status,scopes,external_account_id,last_synced_at,error_code,metadata,created_at").order("created_at",{ascending:false});if(error)return failure(error);return NextResponse.json({data})}

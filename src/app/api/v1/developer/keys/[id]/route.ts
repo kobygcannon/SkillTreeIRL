@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {authenticated,failure} from "@/domains/shared/http";
+export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){const auth=await authenticated();if("error" in auth)return auth.error;const {id}=await params;const {error}=await auth.supabase.from("api_keys").update({revoked_at:new Date().toISOString()}).eq("id",id).is("revoked_at",null);if(error)return failure(error);return new NextResponse(null,{status:204})}
