@@ -9,8 +9,8 @@ const goalFilters=new Set<GoalFilter>(["active","later","completed","archived"])
 
 export default async function AuthenticatedApp({searchParams}:{searchParams:Promise<{view?:string;filter?:string}>}) {
   const supabase=await createClient(); if(!supabase)redirect("/sign-in?error=not_configured");
-  const {data:userResult}=await supabase.auth.getUser(); if(!userResult.user)redirect("/sign-in");
-  const {data:assurance}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel(); if(assurance?.currentLevel==="aal1"&&assurance.nextLevel==="aal2")redirect("/mfa");
+  const {data:userResult,error:userError}=await supabase.auth.getUser();if(userError)throw new Error("Your session could not be verified",{cause:userError});if(!userResult.user)redirect("/sign-in");
+  const {data:assurance,error:assuranceError}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();if(assuranceError)throw new Error("Your sign-in assurance could not be verified",{cause:assuranceError});if(assurance?.currentLevel==="aal1"&&assurance.nextLevel==="aal2")redirect("/mfa");
   const [{data:preferenceResult,error:preferenceError},params]=await Promise.all([supabase.from("user_preferences").select("locale,theme").single(),searchParams]);
   if(preferenceError)throw new Error("Account preferences could not be loaded",{cause:preferenceError});
   const locale=preferenceResult?.locale||"en-GB", initialTheme=(preferenceResult?.theme||"system") as "system"|"light"|"dark";
