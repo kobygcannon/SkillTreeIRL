@@ -49,11 +49,23 @@ export default function AuthenticatedQuickAdd({
   const [quests, setQuests] = useState<Option[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [optionsLoading,setOptionsLoading]=useState(true);
+  const [optionsFailed,setOptionsFailed]=useState(false);
+  const loadOptions=()=>{setOptionsLoading(true);return Promise.all([
+    fetch("/api/v1/skills").then((r) => {if(!r.ok)throw new Error();return r.json()}),
+    fetch("/api/v1/goals?status=active,focus").then((r) => {if(!r.ok)throw new Error();return r.json()}),
+    fetch("/api/v1/quests").then((r) => {if(!r.ok)throw new Error();return r.json()}),
+  ]).then(([skillBody, goalBody, questBody]) => {
+    setSkills(skillBody.data || []);
+    setGoals(goalBody.data || []);
+    setQuests((questBody.data || []).filter((quest: { status?: string }) => ["ready", "in_progress", "overdue"].includes(quest.status || "")));
+    setOptionsFailed(false);
+  }).catch(()=>setOptionsFailed(true)).finally(()=>setOptionsLoading(false))};
   useEffect(() => {
     Promise.all([
-      fetch("/api/v1/skills").then((r) => r.json()),
-      fetch("/api/v1/goals?status=active,focus").then((r) => r.json()),
-      fetch("/api/v1/quests").then((r) => r.json()),
+      fetch("/api/v1/skills").then((r) => {if(!r.ok)throw new Error();return r.json()}),
+      fetch("/api/v1/goals?status=active,focus").then((r) => {if(!r.ok)throw new Error();return r.json()}),
+      fetch("/api/v1/quests").then((r) => {if(!r.ok)throw new Error();return r.json()}),
     ]).then(([skillBody, goalBody, questBody]) => {
       setSkills(skillBody.data || []);
       setGoals(goalBody.data || []);
@@ -62,7 +74,8 @@ export default function AuthenticatedQuickAdd({
           ["ready", "in_progress", "overdue"].includes(quest.status || ""),
         ),
       );
-    });
+      setOptionsFailed(false);
+    }).catch(()=>setOptionsFailed(true)).finally(()=>setOptionsLoading(false));
   }, []);
 
   const send = async (
@@ -398,6 +411,8 @@ export default function AuthenticatedQuickAdd({
             <X />
           </button>
         </div>
+        {optionsLoading&&<p className="modal-tip" role="status">Loading your goals, quests, and skills…</p>}
+        {optionsFailed&&<div className="gentle" role="alert"><div><b>Your linked records are temporarily unavailable</b><p>You can still create an independent goal, skill, habit, or journal note. Retry before updating progress or linking work.</p><button type="button" className="outline" onClick={loadOptions}>Try again</button></div></div>}
         {mode === "menu" ? (
           <div className="quick-grid">
             <Choice
