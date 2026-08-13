@@ -11,10 +11,13 @@ export default async function AuthenticatedApp({searchParams}:{searchParams:Prom
   const supabase=await createClient(); if(!supabase)redirect("/sign-in?error=not_configured");
   const {data:userResult}=await supabase.auth.getUser(); if(!userResult.user)redirect("/sign-in");
   const {data:assurance}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel(); if(assurance?.currentLevel==="aal1"&&assurance.nextLevel==="aal2")redirect("/mfa");
-  const [{data:preferenceResult},params]=await Promise.all([supabase.from("user_preferences").select("locale,theme").single(),searchParams]);
+  const [{data:preferenceResult,error:preferenceError},params]=await Promise.all([supabase.from("user_preferences").select("locale,theme").single(),searchParams]);
+  if(preferenceError)throw new Error("Account preferences could not be loaded",{cause:preferenceError});
   const locale=preferenceResult?.locale||"en-GB", initialTheme=(preferenceResult?.theme||"system") as "system"|"light"|"dark";
   const initialPage=pages.has(params.view as Page)?params.view as Page:"today", initialGoalFilter=goalFilters.has(params.filter as GoalFilter)?params.filter as GoalFilter:"active";
-  const profileTimezone=(await supabase.from("profiles").select("timezone").single()).data?.timezone||"UTC";
+  const {data:timezoneProfile,error:timezoneError}=await supabase.from("profiles").select("timezone").single();
+  if(timezoneError)throw new Error("Account timezone could not be loaded",{cause:timezoneError});
+  const profileTimezone=timezoneProfile.timezone||"UTC";
   const today=new Intl.DateTimeFormat("en-CA",{timeZone:profileTimezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const todayTime=new Date(`${today}T12:00:00Z`).getTime(),weekday=new Date(todayTime).getUTCDay()||7;
   const [goalResult,questResult,habitResult,profileResult,skillResult,achievementCountResult,progressResult]=await Promise.all([
@@ -24,6 +27,8 @@ export default async function AuthenticatedApp({searchParams}:{searchParams:Prom
     supabase.from("profiles").select("display_name,character_xp").single(),supabase.from("skill_xp_totals").select("skill_id,name,category,parent_id,lifetime_xp,recent_xp").order("name"),
     supabase.from("achievement_unlocks").select("id",{count:"exact",head:true}),supabase.from("user_progress_summary").select("lifetime_xp,weekly_xp,lifetime_activities").single(),
   ]);
+  const loadError=goalResult.error||questResult.error||habitResult.error||profileResult.error||skillResult.error||achievementCountResult.error||progressResult.error;
+  if(loadError)throw new Error("Your SkillTree could not be loaded",{cause:loadError});
   if(!goalResult.error&&goalResult.data?.length===0)redirect("/onboarding");
   const goals:GoalItem[]=(goalResult.data||[]).map(g=>{const quietDays=Math.floor((todayTime-new Date(g.updated_at).getTime())/86400000),momentum=quietDays<=2?"High":quietDays<=7?"Steady":quietDays<=14?"Building":"Quiet",status=g.status==="active"&&g.priority==="focus"?"Focus":g.status.slice(0,1).toUpperCase()+g.status.slice(1);return{id:g.id,title:g.title,category:g.category,measurement:g.measurement,icon:g.category==="Health"?"🏃":g.category==="Finance"?"◒":"✦",current:Number(g.current_value),target:Number(g.target_value||0),unit:g.currency||g.unit||"",status,priority:g.priority as GoalItem["priority"],color:colors[g.category]||"#7c6cf2",deadline:g.deadline?new Intl.DateTimeFormat(locale,{day:"numeric",month:"short"}).format(new Date(g.deadline)):"No deadline",momentum}}).sort((a,b)=>{const priority={focus:0,high:1,normal:2,low:3,later:4};return(priority[a.priority||"normal"]-priority[b.priority||"normal"])});
   const questRows=[...(questResult.data||[])].sort((a,b)=>{const rank=(q:typeof a)=>q.pinned_at?0:(q.status==="overdue"&&q.priority==="high")?1:(q.quest_dependencies?.length?2:3);return rank(a)-rank(b)||new Date(a.due_at||"9999-12-31").getTime()-new Date(b.due_at||"9999-12-31").getTime()});
