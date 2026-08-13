@@ -18,6 +18,16 @@ test("demo is read-only and converts attempted mutations", async ({ page }) => {
   await expect(page.getByText("synthetic data and never saves changes")).toBeVisible();
 });
 
+test("public help is searchable and support submission requires an account", async ({page})=>{
+  await page.goto("/support");
+  await expect(page.getByRole("heading",{name:"Help centre"})).toBeVisible();
+  await page.getByRole("textbox",{name:"Search help"}).fill("privacy");
+  await expect(page.getByText("Privacy and evidence")).toBeVisible();
+  await expect(page.getByText("How XP works")).toBeHidden();
+  await expect(page.getByRole("link",{name:"Sign in to contact support"})).toHaveAttribute("href",/next=%2Fsupport/);
+  await expect(page.getByLabel("Diagnostic ID")).not.toHaveValue("");
+});
+
 for (const route of ["/", "/sign-in?mode=signup", "/privacy", "/support"]) {
   test(`${route} has no serious automated accessibility violations`, async ({ page }) => {
     await page.goto(route);
