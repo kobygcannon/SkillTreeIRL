@@ -119,6 +119,7 @@ export type Quest = {
   status: "planned" | "ready" | "in_progress" | "completed" | "skipped" | "cancelled" | "overdue";
   pinned: boolean;
 };
+export type ActiveFocusSession = {id:string;title:string;startedAt:string};
 export type Habit = {
   id: string;
   title: string;
@@ -485,6 +486,7 @@ export function SkillTreeApp({
   locale = "en-GB",
   initialGoalFilter = "active",
   initialTheme = "system",
+  initialFocus = null,
 }: {
   initialGoals?: GoalItem[];
   initialQuests?: Quest[];
@@ -496,6 +498,7 @@ export function SkillTreeApp({
   locale?: string;
   initialGoalFilter?: GoalFilter;
   initialTheme?: "system" | "light" | "dark";
+  initialFocus?: ActiveFocusSession | null;
 }) {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -520,11 +523,7 @@ export function SkillTreeApp({
   const [skillOverrides, setSkillOverrides] = useState<Skill[] | null>(null);
   const skillList =
     skillOverrides ?? (authenticated ? initialSkills || [] : skills);
-  const [focus, setFocus] = useState<{
-    id: string;
-    title: string;
-    startedAt: string;
-  } | null>(null);
+  const [focus, setFocus] = useState<ActiveFocusSession | null>(initialFocus);
   const [demoConversion, setDemoConversion] = useState(false);
   useEffect(() => {
     if (initialTheme !== "system") return;
@@ -677,7 +676,18 @@ export function SkillTreeApp({
       }),
       body = await response.json();
     if (!response.ok) {
+      if(body.error?.code==="FOCUS_SESSION_RUNNING"&&body.data?.id&&body.data?.started_at){
+        const runningQuest=quests.find(item=>item.id===body.data.quest_id);
+        setFocus({id:body.data.id,title:runningQuest?.title||"Focus session",startedAt:body.data.started_at});
+        toast("Your running focus session was restored.");
+        return;
+      }
       toast(body.error?.message || "Focus session could not start.");
+      return;
+    }
+    if(body.data.status!=="running"){
+      toast("That focus-session request was already completed.");
+      router.refresh();
       return;
     }
     setFocus({
