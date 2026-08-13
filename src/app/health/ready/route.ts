@@ -7,6 +7,7 @@ import {
   deploymentRelease,
 } from "@/lib/deployment-metadata";
 import { emailNotificationsReady } from "@/lib/notifications/email";
+import { billingConfigurationReady } from "@/lib/stripe";
 
 export async function GET() {
   const production = deploymentEnvironment() === "production";
@@ -22,6 +23,7 @@ export async function GET() {
   const legal = !production || legalConfigurationReady(),
     monitoring = !production || monitoringConfigurationReady(),
     emailNotifications = !production || emailNotificationsReady(),
+    billing = !production || billingConfigurationReady(),
     webPushNotifications =
       !production ||
       Boolean(
@@ -35,6 +37,7 @@ export async function GET() {
       legal &&
       monitoring &&
       emailNotifications &&
+      billing &&
       webPushNotifications;
   const admin = core ? createAdminClient() : null;
   const [database, requestProtection] = admin
@@ -57,6 +60,7 @@ export async function GET() {
       legal,
       monitoring,
       emailNotifications,
+      billing,
       webPushNotifications,
       database: !database.error,
       requestProtection:

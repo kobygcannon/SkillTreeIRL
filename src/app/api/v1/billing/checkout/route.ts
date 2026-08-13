@@ -16,7 +16,7 @@ export async function POST(){
    const {error:saveError}=await auth.supabase.from("subscriptions").upsert({user_id:auth.userId,provider:"stripe",provider_customer_id:customer,plan:"free",status:"active"},{onConflict:"user_id"});
    if(saveError)throw saveError;
   }
-  const session=await stripe.checkout.sessions.create({mode:"subscription",customer,line_items:[{price,quantity:1}],success_url:`${appUrl}/app?billing=success`,cancel_url:`${appUrl}/app?billing=cancelled`,allow_promotion_codes:true,subscription_data:{trial_period_days:14,metadata:{skilltree_user_id:auth.userId}},metadata:{skilltree_user_id:auth.userId}},{idempotencyKey:`checkout:${auth.userId}:${Math.floor(Date.now()/300000)}`});
+  const session=await stripe.checkout.sessions.create({mode:"subscription",customer,line_items:[{price,quantity:1}],success_url:`${appUrl}/app?billing=success`,cancel_url:`${appUrl}/app?billing=cancelled`,allow_promotion_codes:true,integration_identifier:"skilltree_ir_lprodapp",subscription_data:{trial_period_days:14,metadata:{skilltree_user_id:auth.userId}},metadata:{skilltree_user_id:auth.userId}},{idempotencyKey:`checkout:${auth.userId}:${Math.floor(Date.now()/300000)}`});
   return NextResponse.json({data:{url:session.url}})
  }catch(error){return failure(error)}
 }
