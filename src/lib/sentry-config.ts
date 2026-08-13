@@ -1,4 +1,5 @@
 import type * as Sentry from "@sentry/nextjs";
+import {deploymentEnvironment,deploymentRelease} from "@/lib/deployment-metadata";
 
 type SentryEvent = Parameters<NonNullable<NonNullable<Parameters<typeof Sentry.init>[0]>["beforeSend"]>>[0];
 
@@ -25,11 +26,11 @@ export function scrubSentryEvent(event: SentryEvent) {
 }
 
 export function sentryEnvironment() {
-  return process.env.SENTRY_ENVIRONMENT || process.env.APP_ENV || process.env.NODE_ENV;
+  return process.env.SENTRY_ENVIRONMENT || deploymentEnvironment();
 }
 
 export function sentryRelease() {
-  return process.env.SENTRY_RELEASE || process.env.APP_RELEASE;
+  return process.env.SENTRY_RELEASE || deploymentRelease();
 }
 
 export function sentryTraceSampleRate() {
