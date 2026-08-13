@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(45);
+select plan(53);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -38,6 +38,9 @@ select ok(not has_function_privilege('authenticated','public.apply_moderation_ac
 select has_column('public','journal_entries','goal_id','journal entries can relate to goals');
 select has_column('public','journal_entries','activity_id','journal entries can relate to activities');
 select has_column('public','journal_entries','skill_id','journal entries can relate to skills');
+select has_function('public','transition_focus_session',array['uuid','text','text','text'],'focus transitions and completion are transactional');
+select ok(has_function_privilege('authenticated','public.transition_focus_session(uuid,text,text,text)','EXECUTE'),'signed-in users can transition their focus session');
+select ok(not has_function_privilege('anon','public.transition_focus_session(uuid,text,text,text)','EXECUTE'),'anonymous users cannot transition focus sessions');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
@@ -65,6 +68,14 @@ select lives_ok($$insert into public.challenge_members(challenge_id,user_id,stat
 select lives_ok($$insert into public.push_subscriptions(user_id,endpoint,p256dh,auth_key) values('62000000-0000-0000-0000-000000000002','https://push.example/sub','public-key','auth-key')$$,'user can store their own push subscription');
 select throws_ok($$insert into public.push_subscriptions(user_id,endpoint,p256dh,auth_key) values('63000000-0000-0000-0000-000000000003','https://push.example/spoof','public-key','auth-key')$$,'42501','new row violates row-level security policy for table "push_subscriptions"','user cannot spoof another push owner');
 select throws_ok($$select count(*) from public.product_events$$,'42501','permission denied for table product_events','raw product events are not exposed to users');
+
+insert into public.focus_sessions(id,user_id,status,started_at,active_seconds)
+values('66000000-0000-0000-0000-000000000001','62000000-0000-0000-0000-000000000002','paused',now()-interval '2 minutes',120);
+select is((public.transition_focus_session('66000000-0000-0000-0000-000000000001','resume',null,null)->>'status'),'running','a paused focus session resumes');
+select is((public.transition_focus_session('66000000-0000-0000-0000-000000000001','pause',null,null)->>'status'),'paused','a running focus session pauses');
+select is((public.transition_focus_session('66000000-0000-0000-0000-000000000001','complete','Focused test work','Finished the test')->>'status'),'completed','finishing completes the focus session');
+select is((select count(*) from public.activities where idempotency_key='focus:66000000-0000-0000-0000-000000000001'),1::bigint,'finishing creates exactly one activity');
+select is((select count(*) from public.activities where id=(public.transition_focus_session('66000000-0000-0000-0000-000000000001','complete','Focused test work','Finished the test')->>'activity_id')::uuid),1::bigint,'retrying finish returns the original activity without duplication');
 
 select * from finish();
 rollback;

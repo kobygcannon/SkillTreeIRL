@@ -119,7 +119,7 @@ export type Quest = {
   status: "planned" | "ready" | "in_progress" | "completed" | "skipped" | "cancelled" | "overdue";
   pinned: boolean;
 };
-export type ActiveFocusSession = {id:string;title:string;startedAt:string};
+export type ActiveFocusSession = {id:string;title:string;startedAt:string;status:"running"|"paused";activeSeconds:number;segmentStartedAt:string|null};
 export type Habit = {
   id: string;
   title: string;
@@ -678,7 +678,7 @@ export function SkillTreeApp({
     if (!response.ok) {
       if(body.error?.code==="FOCUS_SESSION_RUNNING"&&body.data?.id&&body.data?.started_at){
         const runningQuest=quests.find(item=>item.id===body.data.quest_id);
-        setFocus({id:body.data.id,title:runningQuest?.title||"Focus session",startedAt:body.data.started_at});
+        setFocus({id:body.data.id,title:runningQuest?.title||"Focus session",startedAt:body.data.started_at,status:body.data.status,activeSeconds:Number(body.data.active_seconds||0),segmentStartedAt:body.data.segment_started_at||null});
         toast("Your running focus session was restored.");
         return;
       }
@@ -694,6 +694,9 @@ export function SkillTreeApp({
       id: body.data.id,
       title: quest.title,
       startedAt: body.data.started_at,
+      status: "running",
+      activeSeconds: Number(body.data.active_seconds||0),
+      segmentStartedAt: body.data.segment_started_at||body.data.started_at,
     });
   };
   const go = (p: Page) => {
