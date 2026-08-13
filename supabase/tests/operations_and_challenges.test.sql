@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(30);
 
 select has_table('public','push_subscriptions','push subscription storage exists');
 select has_table('public','product_events','privacy-safe product events exist');
@@ -20,6 +20,9 @@ select ok(not has_function_privilege('authenticated','public.consume_rate_limit(
 select has_function('public','create_challenge',array['text','text','timestamp with time zone','timestamp with time zone','text','numeric','text','uuid[]'],'transactional challenge creation exists');
 select ok(has_function_privilege('authenticated','public.create_challenge(text,text,timestamptz,timestamptz,text,numeric,text,uuid[])','EXECUTE'),'signed-in users can create challenges transactionally');
 select ok(not has_function_privilege('anon','public.create_challenge(text,text,timestamptz,timestamptz,text,numeric,text,uuid[])','EXECUTE'),'anonymous users cannot create challenges');
+select has_function('public','update_account_preferences',array['jsonb','jsonb'],'transactional account preference updates exist');
+select ok(has_function_privilege('authenticated','public.update_account_preferences(jsonb,jsonb)','EXECUTE'),'signed-in users can update account preferences transactionally');
+select ok(not has_function_privilege('anon','public.update_account_preferences(jsonb,jsonb)','EXECUTE'),'anonymous users cannot update account preferences');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('61000000-0000-0000-0000-000000000001','challenge-owner@example.test','',now(),'{}'),
