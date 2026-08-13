@@ -473,6 +473,7 @@ export function SkillTreeApp({
   initialGoals,
   initialQuests,
   initialHabits,
+  initialSkills,
   authenticated = false,
   userSummary,
   initialPage = "today",
@@ -483,6 +484,7 @@ export function SkillTreeApp({
   initialGoals?: GoalItem[];
   initialQuests?: Quest[];
   initialHabits?: Habit[];
+  initialSkills?: Skill[];
   authenticated?: boolean;
   userSummary?: UserSummary;
   initialPage?: Page;
@@ -510,55 +512,15 @@ export function SkillTreeApp({
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [dark, setDark] = useState(initialTheme === "dark");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [skillList, setSkillList] = useState(skills);
+  const [skillOverrides, setSkillOverrides] = useState<Skill[] | null>(null);
+  const skillList =
+    skillOverrides ?? (authenticated ? initialSkills || [] : skills);
   const [focus, setFocus] = useState<{
     id: string;
     title: string;
     startedAt: string;
   } | null>(null);
   const [demoConversion, setDemoConversion] = useState(false);
-  useEffect(() => {
-    if (!authenticated) return;
-    fetch("/api/v1/skills/tree")
-      .then((r) => r.json())
-      .then((body) => {
-        const nodes = (body.data || []) as Array<{
-          skill_id: string;
-          name: string;
-          category: string;
-          parent_id: string | null;
-          level: number;
-          lifetime_xp: number;
-          nextLevelXp: number;
-          recent_xp: number;
-        }>;
-        const palette = [
-          "#7164e7",
-          "#d77a4b",
-          "#44a77a",
-          "#ca9d42",
-          "#5c73da",
-          "#b16fb5",
-        ];
-        setSkillList(
-          nodes.map((node, index) => ({
-            id: node.skill_id,
-            name: node.name,
-            category: node.category,
-            level: node.level,
-            xp: Number(node.lifetime_xp),
-            next: Number(node.lifetime_xp) + Number(node.nextLevelXp),
-            color: palette[index % palette.length],
-            icon: node.name.slice(0, 1).toUpperCase(),
-            x: 15 + (index % 4) * 23,
-            y: 18 + Math.floor(index / 4) * 20,
-            parent: node.parent_id || undefined,
-            recent: Number(node.recent_xp) > 0,
-          })),
-        );
-      })
-      .catch(() => {});
-  }, [authenticated]);
   useEffect(() => {
     if (initialTheme !== "system") return;
     const media = window.matchMedia("(prefers-color-scheme: dark)"),
@@ -923,13 +885,15 @@ export function SkillTreeApp({
                 skill={selectedSkill}
                 notify={toast}
                 onChanged={(updated) => {
-                  setSkillList((items) =>
-                    updated
+                  setSkillOverrides((overrides) => {
+                    const items =
+                      overrides ?? (authenticated ? initialSkills || [] : skills);
+                    return updated
                       ? items.map((item) =>
                           item.id === updated.id ? updated : item,
                         )
-                      : items.filter((item) => item.id !== selectedSkill.id),
-                  );
+                      : items.filter((item) => item.id !== selectedSkill.id);
+                  });
                   setSelectedSkill(updated);
                 }}
               />
