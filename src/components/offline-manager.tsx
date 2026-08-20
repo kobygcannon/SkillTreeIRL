@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import {usePathname} from "next/navigation";
+import { usePathname } from "next/navigation";
 import { CloudOff, RefreshCw, Trash2 } from "lucide-react";
 import {
   discardQueuedMutation,
@@ -10,13 +10,31 @@ import {
   type QueuedMutation,
 } from "@/lib/offline/queue";
 export default function OfflineManager() {
-  const pathname=usePathname(),enabled=["/app","/onboarding","/settings","/community","/tools","/templates","/referrals","/admin","/skills/","/activities/","/quests/","/habits/","/journal/","/achievements/","/goals/"].some(path=>pathname.startsWith(path));
+  const pathname = usePathname(),
+    enabled = [
+      "/app",
+      "/onboarding",
+      "/settings",
+      "/community",
+      "/tools",
+      "/templates",
+      "/referrals",
+      "/admin",
+      "/workspace",
+      "/skills/",
+      "/activities/",
+      "/quests/",
+      "/habits/",
+      "/journal/",
+      "/achievements/",
+      "/goals/",
+    ].some((path) => pathname.startsWith(path));
   const [online, setOnline] = useState(() =>
       typeof navigator === "undefined" ? true : navigator.onLine,
     ),
     [items, setItems] = useState<QueuedMutation[]>([]);
   useEffect(() => {
-    if(!enabled)return;
+    if (!enabled) return;
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     const refresh = async () => {
@@ -44,7 +62,7 @@ export default function OfflineManager() {
       window.removeEventListener("skilltree-sync-changed", refresh);
     };
   }, [enabled]);
-  if(!enabled)return null;
+  if (!enabled) return null;
   if (online && !items.length) return null;
   const conflicts = items.filter((item) => item.state === "conflict");
   return (

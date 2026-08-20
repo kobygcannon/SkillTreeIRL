@@ -49,7 +49,8 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [invite, setInvite] = useState(""),
-    [inviteStatus, setInviteStatus] = useState("");
+    [inviteStatus, setInviteStatus] = useState(""),
+    [closeText, setCloseText] = useState("");
   const load = useCallback(
     () =>
       fetch(`/api/v1/organizations/${id}`)
@@ -175,6 +176,21 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
       setError(body.error?.message || "Membership could not be updated.");
     else await load();
     setBusy(false);
+  };
+  const closeWorkspace = async () => {
+    setBusy(true);
+    setError("");
+    const response = await fetch(`/api/v1/organizations/${id}`, {
+        method: "DELETE",
+        headers: { "x-delete-confirmation": closeText },
+      }),
+      body = await response.json().catch(() => null);
+    if (!response.ok) {
+      setError(body?.error?.message || "The workspace could not be closed.");
+      setBusy(false);
+      return;
+    }
+    router.replace("/app");
   };
   if (error && !data)
     return (
@@ -546,6 +562,31 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
           <Link className="outline-link" href="/pricing">
             Compare plans
           </Link>
+          {me?.role === "owner" && (
+            <details className="workspace-danger">
+              <summary>Close workspace permanently</summary>
+              <p>
+                This first cancels any active Company subscription, then
+                permanently deletes company objectives, assignments, check-ins,
+                invitations and memberships. Personal SkillTrees are unaffected.
+              </p>
+              <label>
+                Type {data.organization.name} to confirm
+                <input
+                  value={closeText}
+                  onChange={(event) => setCloseText(event.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <button
+                className="danger"
+                disabled={busy || closeText !== data.organization.name}
+                onClick={closeWorkspace}
+              >
+                Cancel subscription and close workspace
+              </button>
+            </details>
+          )}
         </section>
       </section>
     </main>

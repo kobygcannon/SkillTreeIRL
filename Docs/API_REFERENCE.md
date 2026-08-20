@@ -65,7 +65,7 @@ Important POST/PATCH operations accept or generate an idempotency key. Offline-c
 
 ## Company workspaces
 
-- `GET|POST /api/v1/organizations`, `GET|PATCH /api/v1/organizations/:id` - list, create and configure isolated workspaces.
+- `GET|POST /api/v1/organizations`, `GET|PATCH|DELETE /api/v1/organizations/:id` - list, create, configure, or owner-confirm close isolated workspaces; closure cancels active billing before deletion.
 - `POST /api/v1/organizations/:id/invitations` - create an email-bound, hashed, expiring invitation and attempt transactional email delivery.
 - `POST /api/v1/organization-invitations/accept` - accept only as the authenticated invited email.
 - `PATCH /api/v1/organizations/:id/members/:userId` - protected role changes and reversible member suspension.

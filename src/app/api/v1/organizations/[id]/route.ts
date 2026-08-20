@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
+import { cancelStripeSubscription, stripeClient } from "@/lib/stripe";
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -97,6 +98,88 @@ export async function PATCH(
       .single();
     if (error) return failure(error);
     return NextResponse.json({ data });
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const auth = await authenticated();
+    if ("error" in auth) return auth.error;
+    const { id } = await params;
+    const { data: claims } = await auth.supabase.auth.getClaims();
+    const issuedAt = Number(claims?.claims?.iat || 0);
+    if (Date.now() / 1000 - issuedAt > 600)
+      return NextResponse.json(
+        {
+          error: {
+            code: "RECENT_AUTH_REQUIRED",
+            message: "Sign in again before closing a workspace.",
+          },
+        },
+        { status: 403 },
+      );
+    const { data: organization, error: organizationError } = await auth.supabase
+      .from("organizations")
+      .select(
+        "name,owner_id,organization_subscriptions(provider_subscription_id,status)",
+      )
+      .eq("id", id)
+      .single();
+    if (organizationError) return failure(organizationError);
+    if (organization.owner_id !== auth.userId)
+      return NextResponse.json(
+        {
+          error: {
+            code: "FORBIDDEN",
+            message: "Only the workspace owner can close it.",
+          },
+        },
+        { status: 403 },
+      );
+    if (request.headers.get("x-delete-confirmation") !== organization.name)
+      return NextResponse.json(
+        {
+          error: {
+            code: "CONFIRMATION_REQUIRED",
+            message: `Type ${organization.name} to confirm workspace closure.`,
+          },
+        },
+        { status: 400 },
+      );
+    const subscription = Array.isArray(organization.organization_subscriptions)
+      ? organization.organization_subscriptions[0]
+      : organization.organization_subscriptions;
+    if (
+      subscription?.provider_subscription_id &&
+      ["trialing", "active", "past_due"].includes(subscription.status)
+    ) {
+      const stripe = stripeClient();
+      if (!stripe)
+        return NextResponse.json(
+          {
+            error: {
+              code: "BILLING_UNAVAILABLE",
+              message:
+                "Billing is temporarily unavailable, so the workspace was not closed or charged again.",
+            },
+          },
+          { status: 503 },
+        );
+      await cancelStripeSubscription(
+        stripe,
+        subscription.provider_subscription_id,
+      );
+    }
+    const { error } = await auth.supabase.rpc("close_organization", {
+      p_organization_id: id,
+    });
+    if (error) return failure(error);
+    return NextResponse.json({ data: { closed: true } });
   } catch (error) {
     return failure(error);
   }

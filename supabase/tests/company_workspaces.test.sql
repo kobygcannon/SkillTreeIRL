@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(25);
 
 select has_function('public','create_organization_objective',array['uuid','text','text','text','numeric','text','timestamp with time zone','uuid[]'],'transactional company objective creation exists');
 select ok(has_function_privilege('authenticated','public.create_organization_objective(uuid,text,text,text,numeric,text,timestamptz,uuid[])','EXECUTE'),'authenticated workspace leads can call objective creation');
@@ -11,6 +11,9 @@ select has_function('public','manage_organization_member',array['uuid','uuid','t
 select ok(has_function_privilege('authenticated','public.manage_organization_member(uuid,uuid,text,text)','EXECUTE'),'authenticated owners and admins can request member changes');
 select ok(not has_function_privilege('anon','public.manage_organization_member(uuid,uuid,text,text)','EXECUTE'),'anonymous callers cannot manage members');
 select ok(not has_table_privilege('authenticated','public.organization_members','DELETE'),'clients cannot remove membership history directly');
+select has_function('public','close_organization',array['uuid'],'owner-authorized workspace closure exists');
+select ok(has_function_privilege('authenticated','public.close_organization(uuid)','EXECUTE'),'authenticated owners can request workspace closure');
+select ok(not has_function_privilege('anon','public.close_organization(uuid)','EXECUTE'),'anonymous callers cannot close workspaces');
 
 insert into auth.users(id,email,encrypted_password,email_confirmed_at,raw_user_meta_data) values
 ('91000000-0000-0000-0000-000000000001','company-owner@example.test','',now(),'{"display_name":"Owner"}'),
@@ -41,6 +44,7 @@ select is((select role from public.organization_members where organization_id='9
 select lives_ok($$select public.manage_organization_member('94000000-0000-0000-0000-000000000004','92000000-0000-0000-0000-000000000002','suspend',null)$$,'owner can suspend access without deleting history');
 select is((select status from public.organization_members where organization_id='94000000-0000-0000-0000-000000000004' and user_id='92000000-0000-0000-0000-000000000002'),'suspended','suspension persists');
 select throws_ok($$select public.manage_organization_member('94000000-0000-0000-0000-000000000004','91000000-0000-0000-0000-000000000001','suspend',null)$$,'P0001','OWNER_IMMUTABLE','the workspace owner cannot be suspended');
+select lives_ok($$select public.close_organization('94000000-0000-0000-0000-000000000004')$$,'owner can close the workspace after external billing cancellation');
 
 select * from finish();
 rollback;

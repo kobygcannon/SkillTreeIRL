@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   billingConfigurationReady,
+  cancelStripeSubscription,
   companyBillingConfigurationReady,
   stripeMode,
 } from "./stripe";
@@ -54,5 +55,20 @@ describe("billingConfigurationReady", () => {
     process.env.STRIPE_SECRET_KEY = "sk_live_value";
     expect(billingConfigurationReady()).toBe(true);
     expect(stripeMode()).toBe("live");
+  });
+  it("cancels subscriptions safely under retry", async () => {
+    const cancel = vi.fn().mockResolvedValue({ status: "canceled" });
+    await cancelStripeSubscription(
+      { subscriptions: { cancel } } as never,
+      "sub_active",
+    );
+    expect(cancel).toHaveBeenCalledWith("sub_active");
+    cancel.mockRejectedValueOnce({ code: "resource_missing" });
+    await expect(
+      cancelStripeSubscription(
+        { subscriptions: { cancel } } as never,
+        "sub_already_gone",
+      ),
+    ).resolves.toBeUndefined();
   });
 });

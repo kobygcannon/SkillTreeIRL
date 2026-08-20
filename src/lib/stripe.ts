@@ -29,3 +29,21 @@ export function companyBillingConfigurationReady() {
     billingConfigurationReady() && Boolean(process.env.STRIPE_TEAM_PRICE_ID)
   );
 }
+
+export async function cancelStripeSubscription(
+  stripe: Stripe,
+  subscriptionId: string,
+) {
+  try {
+    await stripe.subscriptions.cancel(subscriptionId);
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "resource_missing"
+    )
+      return;
+    throw error;
+  }
+}

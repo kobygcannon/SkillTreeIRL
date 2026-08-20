@@ -412,6 +412,38 @@
   color: #35433a;
   text-decoration: none;
 }
+.workspace-danger {
+  margin-top: 28px;
+  border: 1px solid #efc7c7;
+  border-radius: 10px;
+  padding: 14px;
+  color: #743535;
+}
+.workspace-danger summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+.workspace-danger label {
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+  font-size: 12px;
+}
+.workspace-danger input {
+  min-height: 42px;
+  border: 1px solid #d9b1b1;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.workspace-danger .danger {
+  margin-top: 12px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: #a33d3d;
+  color: white;
+  padding: 0 14px;
+}
 .workspace-panel a,
 .workspace-section a {
   color: #6559d4;

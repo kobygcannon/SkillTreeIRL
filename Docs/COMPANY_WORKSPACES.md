@@ -15,12 +15,12 @@ The owner should create the first objective, assign it to specific people, invit
 
 ## Roles
 
-| Role | Intended use | Access |
-| --- | --- | --- |
-| Owner | Accountable company operator | Settings, billing, invitations, objectives and company check-ins |
-| Admin | People/operations administrator | Invitations, billing, objectives and company check-ins; cannot silently take ownership |
-| Manager | Team lead | Create and assign objectives; view manager-visible check-ins |
-| Member | Individual contributor | View objectives and update only their own assignments |
+| Role    | Intended use                    | Access                                                                                 |
+| ------- | ------------------------------- | -------------------------------------------------------------------------------------- |
+| Owner   | Accountable company operator    | Settings, billing, invitations, objectives and company check-ins                       |
+| Admin   | People/operations administrator | Invitations, billing, objectives and company check-ins; cannot silently take ownership |
+| Manager | Team lead                       | Create and assign objectives; view manager-visible check-ins                           |
+| Member  | Individual contributor          | View objectives and update only their own assignments                                  |
 
 Row-level security enforces membership and roles. Protected ownership, membership and invitation fields cannot be changed through broad table updates. Routes validate roles for clear errors, while the database remains the final boundary.
 
@@ -40,6 +40,8 @@ Company Checkout bills the greater of three seats or the current active-member c
 
 Owners and admins use Stripe’s hosted portal for payment details, invoices, eligible plan/quantity changes and cancellation. The UI shows pending cancellation and does not treat a redirect as authoritative; webhooks are authoritative.
 
+Only the owner can permanently close a workspace. Closure requires recent authentication and typing the exact workspace name. Any active/trialing/past-due Stripe subscription is cancelled first; if billing is unavailable, no company data is deleted. Successful closure then removes the isolated company workspace and its objectives, assignments, check-ins, invitations and memberships while leaving every personal SkillTree untouched.
+
 Production Checkout remains disabled unless all live Stripe credentials and the Company price are present. Test keys can never satisfy the production billing gate.
 
 ## Privacy, legal and support
@@ -47,7 +49,7 @@ Production Checkout remains disabled unless all live Stripe credentials and the 
 - SkillTree is controller for platform operations described in the Privacy Policy.
 - An employer will normally be a separate controller for workplace information it requests.
 - Employers must provide their own lawful notice and must not use SkillTree for covert monitoring or solely automated employment decisions.
-- An owner should transfer ownership or close the workspace before deleting the owning account.
+- An owner must close each owned workspace before deleting the owning account. Account deletion fails safely with a clear action until this is done, and any active personal Pro subscription is cancelled before personal records are erased.
 - Support must verify workspace identity and must never disclose personal SkillTree data to a company administrator.
 
 ## Responsive behaviour
