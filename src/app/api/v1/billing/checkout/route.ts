@@ -1,12 +1,12 @@
 import {NextResponse} from "next/server";
 import {authenticated,failure} from "@/domains/shared/http";
-import {stripeClient} from "@/lib/stripe";
+import {billingConfigurationReady,stripeClient} from "@/lib/stripe";
 
 export async function POST(){
  try{
   const auth=await authenticated();if("error" in auth)return auth.error;
   const stripe=stripeClient(),price=process.env.STRIPE_PRO_PRICE_ID,appUrl=process.env.NEXT_PUBLIC_APP_URL;
-  if(!stripe||!price||!appUrl)return NextResponse.json({error:{code:"BILLING_NOT_CONFIGURED",message:"Billing is not configured"}},{status:503});
+  if(!billingConfigurationReady()||!stripe||!price||!appUrl)return NextResponse.json({error:{code:"BILLING_NOT_CONFIGURED",message:"SkillTree Pro checkout is not available in this environment yet."}},{status:503});
   const {data:existing,error:readError}=await auth.supabase.from("subscriptions").select("provider_customer_id,status").maybeSingle();
   if(readError)throw readError;
   let customer=existing?.provider_customer_id||undefined;
