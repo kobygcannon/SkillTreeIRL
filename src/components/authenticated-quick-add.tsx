@@ -24,6 +24,8 @@ type Option = {
   name?: string;
   title?: string;
   current_value?: number;
+  target_value?: number;
+  measurement?: string;
   unit?: string;
   currency?: string;
 };
@@ -49,6 +51,8 @@ export default function AuthenticatedQuickAdd({
   const [skills, setSkills] = useState<Option[]>([]);
   const [goals, setGoals] = useState<Option[]>([]);
   const [quests, setQuests] = useState<Option[]>([]);
+  const [progressGoal, setProgressGoal] = useState<Option | null>(null);
+  const [progressEntryMode, setProgressEntryMode] = useState<"add" | "total">("add");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [optionsLoading,setOptionsLoading]=useState(true);
@@ -229,7 +233,12 @@ export default function AuthenticatedQuickAdd({
     if (mode === "progress")
       return send(
         `/api/v1/goals/${goalId}/progress`,
-        { value: Number(form.get("value")), note: form.get("note") || null },
+        {
+          ...(form.get("delta") !== null
+            ? { delta: Number(form.get("delta")) }
+            : { value: Number(form.get("value")) }),
+          note: form.get("note") || null,
+        },
         "Goal progress saved.",
         { idempotent: true },
       );
@@ -527,21 +536,26 @@ export default function AuthenticatedQuickAdd({
             )}
             {mode === "progress" && (
               <>
-                <GoalSelect goals={goals} required />
-                <label>
-                  New total
-                  <input
-                    name="value"
-                    type="number"
-                    min="0"
-                    step="any"
-                    required
-                  />
-                </label>
-                <label>
-                  What changed?
-                  <textarea name="note" maxLength={1000} />
-                </label>
+                <GoalSelect goals={goals} required onChange={id => {
+                  setProgressGoal(goals.find(goal => goal.id === id) || null);
+                  setProgressEntryMode("add");
+                }} />
+                {progressGoal && ["milestones","composite"].includes(progressGoal.measurement || "") ? (
+                  <div className="progress-derived"><BarChart3 /><h3>Update the parts that calculate this goal</h3><p>{progressGoal.measurement === "milestones" ? "Complete a milestone from the goal page instead of entering a disconnected number." : "Update a linked subgoal; SkillTree calculates the composite total."}</p></div>
+                ) : progressGoal?.measurement === "binary" ? (
+                  <><input type="hidden" name="value" value="1" /><div className="progress-binary"><Target /><div><b>Mark this outcome complete</b><p>This records the goal at 100%.</p></div></div></>
+                ) : progressGoal?.measurement === "open_ended" ? (
+                  <><input type="hidden" name="delta" value="1" /><label>What did you move forward?<textarea name="note" required maxLength={1000} placeholder="Describe the meaningful change" /></label></>
+                ) : progressGoal ? (
+                  <>
+                    <div className="progress-mode">
+                      <button type="button" className={progressEntryMode === "add" ? "active" : ""} onClick={() => setProgressEntryMode("add")}><Plus /> Add amount</button>
+                      <button type="button" className={progressEntryMode === "total" ? "active" : ""} onClick={() => setProgressEntryMode("total")}><BarChart3 /> Set total</button>
+                    </div>
+                    <label>{progressEntryMode === "add" ? "Amount to add" : "New total"} ({progressGoal.currency || progressGoal.unit || "units"})<input name={progressEntryMode === "add" ? "delta" : "value"} type="number" min={progressEntryMode === "add" ? "0.000001" : "0"} max={progressGoal.measurement === "percentage" ? (progressEntryMode === "add" ? 100 - Number(progressGoal.current_value || 0) : 100) : undefined} step="any" required /></label>
+                    <label>What changed? (optional)<textarea name="note" maxLength={1000} /></label>
+                  </>
+                ) : <p className="modal-tip">Choose a goal to see the right progress input.</p>}
               </>
             )}
             {mode === "complete" && (
@@ -726,7 +740,7 @@ export default function AuthenticatedQuickAdd({
               >
                 Back
               </button>
-              <button className="primary" disabled={saving}>
+              <button className="primary" disabled={saving || (mode === "progress" && (!progressGoal || ["milestones","composite"].includes(progressGoal.measurement || "")))}>
                 {saving ? (
                   "Saving…"
                 ) : (
@@ -773,14 +787,16 @@ function Choice({
 function GoalSelect({
   goals,
   required = false,
+  onChange,
 }: {
   goals: Option[];
   required?: boolean;
+  onChange?: (id: string) => void;
 }) {
   return (
     <label>
       Related goal
-      <select name="goalId" required={required}>
+      <select name="goalId" required={required} onChange={event => onChange?.(event.target.value)}>
         <option value="">{required ? "Choose a goal" : "No goal"}</option>
         {goals.map((goal) => (
           <option value={goal.id} key={goal.id}>

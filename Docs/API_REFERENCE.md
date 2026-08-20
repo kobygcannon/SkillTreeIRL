@@ -10,7 +10,7 @@ Important POST/PATCH operations accept or generate an idempotency key. Offline-c
 
 - `GET|POST /api/v1/goals` - list/create goals. Creation enforces plan and focus limits transactionally.
 - `GET|PATCH /api/v1/goals/:id` - owned goal detail/edit.
-- `POST /api/v1/goals/:id/progress` - immutable progress event.
+- `POST /api/v1/goals/:id/progress` - immutable progress event. Requires `Idempotency-Key` and exactly one of `delta` (positive amount to add atomically) or `value` (corrected absolute total), plus an optional note of up to 1,000 characters. Returns the authoritative resulting total.
 - `POST /api/v1/goals/:id/target` - target revision.
 - `POST /api/v1/goals/:id/state` - pause, resume, complete, archive, or reopen.
 - `GET|POST /api/v1/goals/:id/milestones` and `PATCH|DELETE .../:milestoneId` - milestones.

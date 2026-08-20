@@ -22,6 +22,16 @@ The product should be useful in under a minute on an ordinary day. Advanced plan
 
 Goals describe a direction or outcome and support open-ended, numeric, currency, percentage, frequency, duration, milestone, binary, recurring, composite, and custom measurement. A goal may be Focus, Active, Paused, Completed, or Archived. Target changes create revisions; progress creates immutable events; corrections create reversals. Historical values are not silently overwritten.
 
+Progress entry follows the measurement instead of presenting one generic percentage box:
+
+- Numeric, currency, duration, frequency, recurring, and custom goals accept an amount to add by default, with an explicit option to correct the full total.
+- Percentage goals accept percentage points or a corrected total and cannot exceed 100%.
+- Binary goals are completed with one action.
+- Open-ended goals ask what meaningfully moved forward rather than inventing a fake number.
+- Milestone goals move when a milestone is completed; composite goals move when one of their linked goals changes.
+
+Every measurable update previews the resulting total before saving. Additive updates are performed atomically in the database, and retrying the same request returns the original event rather than adding progress twice.
+
 ### Skills and the SkillTree
 
 Skills persist independently of goals. Work may contribute to several skills with explicit allocation. Skill XP comes from ledger transactions, and reversals preserve the audit trail. Skills can be organised into branches, renamed, archived, or merged without destroying their history.

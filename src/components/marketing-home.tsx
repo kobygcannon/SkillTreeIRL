@@ -6,8 +6,13 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronDown,
   Clock3,
+  Dumbbell,
+  GraduationCap,
   Leaf,
+  Palette,
+  PiggyBank,
   Sparkles,
   Target,
   TrendingUp,
@@ -90,31 +95,42 @@ export default function MarketingHome() {
           </div>
         </div>
       </section>
-      <section className="marketing-pillars">
-        <article>
-          <Target />
-          <h2>Goals can change</h2>
-          <p>
-            Revise, pause, complete or archive objectives without erasing the
-            story of how you grew.
-          </p>
-        </article>
-        <article>
-          <Leaf />
-          <h2>Skills stay with you</h2>
-          <p>
-            Your permanent SkillTree develops through meaningful actions across
-            every part of life.
-          </p>
-        </article>
-        <article>
-          <BarChart3 />
-          <h2>Progress without punishment</h2>
-          <p>
-            Momentum and insight help you continue. Missed days never take
-            levels or XP away.
-          </p>
-        </article>
+      <section className="marketing-home-proof">
+        <header>
+          <span>NOT ANOTHER TO-DO LIST</span>
+          <h2>Planning, action and growth in one place.</h2>
+          <p>Most apps forget the work when a task is checked off. SkillTree connects today&apos;s action to the person you are becoming.</p>
+        </header>
+        <div>
+          <article><Target /><b>Decide what matters</b><p>Flexible goals hold a precise target or an open-ended direction.</p></article>
+          <article><CheckCircle2 /><b>Do the next useful thing</b><p>Quests, habits and focus sessions turn intention into action.</p></article>
+          <article><Leaf /><b>Keep what you gained</b><p>Skills and history remain even when a goal changes or ends.</p></article>
+          <article><BarChart3 /><b>Learn from real patterns</b><p>See time, consistency, progress and stronger skill branches.</p></article>
+        </div>
+      </section>
+      <section className="marketing-use-cases">
+        <header>
+          <span>MADE FOR REAL LIFE</span>
+          <h2>See how it fits your goal.</h2>
+          <p>Open an example to follow the exact loop from intention to visible progress.</p>
+        </header>
+        <div>
+          {[
+            {icon:<Dumbbell />,title:"Run my first 10K",goal:"Distance goal · 30 training runs",next:"Complete an easy 20-minute run",proof:"Track distance, active time and consistency without losing progress after a missed week.",skills:"Running · Endurance · Recovery"},
+            {icon:<GraduationCap />,title:"Become conversational in Spanish",goal:"Frequency goal · 4 sessions each week",next:"Finish a 15-minute listening exercise",proof:"Combine lessons, speaking practice and journal notes into one long-running learning record.",skills:"Spanish · Listening · Conversation"},
+            {icon:<PiggyBank />,title:"Build a £3,000 emergency fund",goal:"Private currency goal · £1,250 saved",next:"Review this week's spending and transfer £50",proof:"Record contributions and financial habits while keeping all amounts private.",skills:"Budgeting · Planning · Consistency"},
+            {icon:<Palette />,title:"Develop my illustration practice",goal:"Open-ended creative direction",next:"Complete one 25-minute character study",proof:"Build a portfolio of activity and evidence without forcing creative growth into a fake deadline.",skills:"Drawing · Observation · Visual storytelling"},
+          ].map((item,index)=>(
+            <details key={item.title} open={index===0}>
+              <summary><span>{item.icon}</span><b>{item.title}</b><small>{item.goal}</small><ChevronDown /></summary>
+              <div>
+                <p><strong>Next action</strong>{item.next}</p>
+                <p><strong>What you learn</strong>{item.proof}</p>
+                <p><strong>Skills that grow</strong>{item.skills}</p>
+              </div>
+            </details>
+          ))}
+        </div>
       </section>
       <section className="marketing-story">
         <div>

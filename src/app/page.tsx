@@ -159,12 +159,13 @@ export type UserSummary = {
 const goalsSeed: GoalItem[] = [
   {
     id: "g1",
-    title: "Build & launch SkillTree",
-    category: "Business",
-    icon: "🚀",
-    current: 68,
-    target: 100,
-    unit: "%",
+    title: "Publish my first short story",
+    category: "Creative",
+    icon: "✍️",
+    current: 12400,
+    target: 20000,
+    unit: "words",
+    measurement: "numeric",
     status: "Focus",
     color: "#7c6cf2",
     deadline: "30 Sep",
@@ -178,6 +179,7 @@ const goalsSeed: GoalItem[] = [
     current: 6.4,
     target: 10,
     unit: "km",
+    measurement: "numeric",
     status: "Focus",
     color: "#e48253",
     deadline: "18 Oct",
@@ -190,7 +192,8 @@ const goalsSeed: GoalItem[] = [
     icon: "◒",
     current: 4200,
     target: 10000,
-    unit: "£",
+    unit: "GBP",
+    measurement: "currency",
     status: "Focus",
     color: "#44a77a",
     deadline: "Mar 2027",
@@ -204,6 +207,7 @@ const goalsSeed: GoalItem[] = [
     current: 15,
     target: 24,
     unit: "books",
+    measurement: "numeric",
     status: "Active",
     color: "#ca9d42",
     deadline: "31 Dec",
@@ -213,15 +217,15 @@ const goalsSeed: GoalItem[] = [
 const questsSeed: Quest[] = [
   {
     id: "q1",
-    title: "Polish the onboarding flow",
+    title: "Write 300 words before lunch",
     goalId: "g1",
-    goal: "Build & launch SkillTree",
+    goal: "Publish my first short story",
     xp: 50,
     due: "Today",
     done: false,
     status: "ready",
     pinned: false,
-    skill: "Product Design",
+    skill: "Writing",
   },
   {
     id: "q2",
@@ -304,7 +308,7 @@ const skills: Skill[] = [
   },
   {
     id: "s1",
-    name: "Technology",
+    name: "Creative",
     category: "Domain",
     level: 14,
     xp: 4120,
@@ -332,8 +336,8 @@ const skills: Skill[] = [
   },
   {
     id: "s3",
-    name: "Product Design",
-    category: "Technology",
+    name: "Writing",
+    category: "Creative",
     level: 12,
     xp: 3220,
     next: 3760,
@@ -346,8 +350,8 @@ const skills: Skill[] = [
   },
   {
     id: "s4",
-    name: "Software Dev",
-    category: "Technology",
+    name: "Editing",
+    category: "Creative",
     level: 17,
     xp: 5900,
     next: 6650,
@@ -1653,7 +1657,7 @@ function GoalDetail({
               <h3>Recent activity</h3>
               <p className="timeline-line">
                 <i />
-                Completed “Map core journey”<small>Yesterday · +50 XP</small>
+                Completed “Outline the final scene”<small>Yesterday · +50 XP</small>
               </p>
               <p className="timeline-line">
                 <i />
@@ -1987,10 +1991,10 @@ function SkillDetail({ skill }: { skill: Skill }) {
           <div className="card side-card">
             <h3>Related goals</h3>
             <div className="linked">
-              <span>🚀</span>
+              <span>✍️</span>
               <div>
-                <b>Build & launch SkillTree</b>
-                <small>Focus · 68%</small>
+                <b>Publish my first short story</b>
+                <small>Focus · 12,400 of 20,000 words</small>
               </div>
             </div>
           </div>
@@ -2232,7 +2236,7 @@ function HistoryPage() {
     [
       "Today",
       "Quest completed",
-      "Polish the onboarding flow",
+      "Write 300 words before lunch",
       "+50 XP",
       "#7c6cf2",
     ],
@@ -2255,7 +2259,7 @@ function HistoryPage() {
     [
       "2 Aug",
       "Skill level up",
-      "Product Design reached Level 12",
+      "Writing reached Level 12",
       "",
       "#7c6cf2",
     ],
@@ -2265,7 +2269,7 @@ function HistoryPage() {
       <div className="filterbar">
         <div className="search">
           <Search />
-          <input placeholder="Search your history" />
+          <input aria-label="Search history" placeholder="Search your history" />
         </div>
         <button>All activity</button>
         <button>All time</button>
@@ -2280,7 +2284,7 @@ function HistoryPage() {
               <h3>{r[2]}</h3>
             </div>
             <b>{r[3]}</b>
-            <button>
+            <button aria-label={`More options for ${r[2]}`}>
               <MoreHorizontal />
             </button>
           </div>
