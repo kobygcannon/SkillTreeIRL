@@ -38,22 +38,22 @@ These require inspected provider state. They must remain unchecked until dated e
 - [ ] Production promotion has passed human approval and exact-release live/ready/sign-in probes.
 - [ ] A non-production rollback rehearsal has promoted a prior immutable deployment and passed release and readiness verification.
 
-## Undeployed database head
+## Company database head — applied and verified
 
-The following reviewed migrations exist locally and must be applied in order to staging and verified before they are applied to production. Application commit `6c2e2e2` must not be deployed ahead of this schema head.
+The following reviewed migrations were applied in order to staging and then production on 20 August 2026 before application promotion:
 
 1. `20260820120000_company_objective_transactions.sql`
 2. `20260820130000_company_member_management.sql`
 3. `20260820140000_company_workspace_closure.sql`
 4. `20260820150000_company_trial_entitlements.sql`
 
-Required evidence after each environment is updated: migration-history presence, expected function signatures and grants, transactional probes, the Supabase Security Advisor, and the Supabase Performance Advisor. On 20 August 2026 the Codex Supabase connection could identify both projects but was denied database-management permission, while the signed-in Edge control connection timed out. No migration has been claimed as applied on that basis.
+Both provider migration ledgers contain all four entries. Direct catalog verification in both environments proved fixed empty search paths, no anonymous or PUBLIC execution, authenticated execution only on the intended public RPCs, and no authenticated execution on the private entitlement helper. The 32-assertion rollback-only company probe reached its final closure assertion in staging and production without persisting its synthetic accounts or workspace. Security and performance advisors were run after the DDL; authenticated `SECURITY DEFINER` notices for these public RPCs are expected because they are deliberately callable, explicitly authenticate `auth.uid()`, re-authorize workspace role or ownership, and expose no generic table-write capability.
 
 Do not mark SkillTree IRL production-ready or open public registration until every provider-backed item above has dated evidence.
 
 ## Current production readiness probe
 
-On 20 August 2026, the latest Vercel production deployment completed successfully and `/health/live` returned HTTP 200 with the exact deployed commit in `release`. `/health/ready` returned HTTP 503 with database, request protection, Sentry monitoring, Resend email delivery, and VAPID browser push healthy; configuration/legal and billing were false. The probe therefore remains intentionally unavailable because legal/controller configuration and verified live Stripe billing are incomplete. The matching staging deployment is Ready, but its stable alias remains protected by Vercel SSO; exact-release HTTP smoke evidence still requires the automation bypass. Always use the current `/health/live` response as the authoritative release identifier rather than this narrative record.
+On 20 August 2026, Vercel production release `29c4377a680ac2e75e5964e552492b659776ebd6` completed successfully and `/health/live` returned HTTP 200 with that exact release. The complete seven-test public Playwright suite then passed against the live alias. `/health/ready` returned HTTP 503 with database, request protection, Sentry monitoring, Resend email delivery, and VAPID browser push healthy; configuration/legal and billing were false. The probe therefore remains intentionally unavailable because legal/controller configuration and verified live Stripe billing are incomplete. The matching staging deployment is Ready, but its stable alias remains protected by Vercel SSO; exact-release HTTP smoke evidence still requires the automation bypass. Always use the current `/health/live` response as the authoritative release identifier rather than this narrative record.
 
 ## Provider configuration evidence - 20 August 2026
 
