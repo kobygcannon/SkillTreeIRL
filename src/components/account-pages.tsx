@@ -32,6 +32,10 @@ type AccountData = {
     reduced_motion: boolean;
   };
 };
+type BillingData = {
+  subscription: { plan: "free" | "pro"; status: string; current_period_end?: string | null; cancel_at_period_end?: boolean };
+  policy: { plan: "free" | "pro"; maxActiveGoals: number | null; evidenceStorageBytes: number; capabilities: string[] };
+};
 function Message({ text, error = false }: { text: string; error?: boolean }) {
   return text ? (
     <p className={error ? "form-error" : "modal-tip"}>{text}</p>
@@ -162,6 +166,7 @@ export function LiveProfile({
 export function LiveSettings() {
   const router=useRouter();
   const [data, setData] = useState<AccountData | null>(null),
+    [billingData,setBillingData]=useState<BillingData|null>(null),
     [loading, setLoading] = useState(true),
     [saving, setSaving] = useState(false),
     [message, setMessage] = useState(""),
@@ -192,6 +197,10 @@ export function LiveSettings() {
       })
       .catch(() => setFailed(true))
       .finally(() => setLoading(false));
+    fetch("/api/v1/entitlements")
+      .then((response)=>response.ok?response.json():Promise.reject())
+      .then((body)=>setBillingData(body.data||null))
+      .catch(()=>setBillingData(null));
   }, []);
   const save = async (form: FormData) => {
     const body = {
@@ -479,17 +488,8 @@ export function LiveSettings() {
             </button>
           </div>
           <div className="card side-card">
-            <h2>SkillTree Pro</h2>
-            <p>
-              Unlock expanded insights, imports, integrations, and developer
-              tools. XP is never sold.
-            </p>
-            <button className="primary" onClick={() => billing("checkout")}>
-              Upgrade to Pro
-            </button>
-            <button className="outline" onClick={() => billing("portal")}>
-              Manage billing <ExternalLink />
-            </button>
+            <h2>{billingData?.policy.plan==="pro"?"SkillTree Pro":"Upgrade to SkillTree Pro"}</h2>
+            {billingData?.policy.plan==="pro"?<><p>Your Pro tools are active{billingData.subscription.current_period_end?` through ${new Intl.DateTimeFormat("en-GB",{dateStyle:"medium"}).format(new Date(billingData.subscription.current_period_end))}`:""}. XP and levels still come only from real activity.</p>{billingData.subscription.cancel_at_period_end&&<p>Your subscription is set to end after the current billing period.</p>}<button className="outline" onClick={() => billing("portal")}>Manage billing <ExternalLink /></button></>:<><p>Unlock 30-day analysis, forecasts, year reviews, imports, integrations, custom templates, developer tools, unlimited active goals and 250 MB of private evidence.</p><p><b>£7.99/month</b> after a 14-day free trial. Cancel anytime. XP is never sold.</p><button className="primary" onClick={() => billing("checkout")}>Start 14-day Pro trial</button></>}
           </div>
           <div className="card side-card">
             <h2>Feedback and support</h2>

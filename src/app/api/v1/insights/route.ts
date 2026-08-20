@@ -3,6 +3,7 @@ import {authenticated,failure} from "@/domains/shared/http";
 import {levelProgress} from "@/domains/xp/level";
 import {completionForecast} from "@/domains/insights/forecast";
 import {normalizeLocale,startOfLocaleWeek} from "@/lib/i18n";
+import {userCan} from "@/domains/entitlements/service";
 
 type Progress={goal_id:string;delta:number|null;occurred_at:string};
 type Goal={id:string;title:string;measurement:string;current_value:number;target_value:number|null;unit:string|null};
@@ -12,6 +13,7 @@ const dateLabel=(date:Date,locale:string)=>new Intl.DateTimeFormat(locale,{month
 
 export async function GET(){
  const auth=await authenticated();if("error" in auth)return auth.error;
+ const advanced=await userCan(auth.userId,"advancedInsights");
  const preference=await auth.supabase.from("user_preferences").select("locale").single();if(preference.error)return failure(preference.error);
  const locale=normalizeLocale(preference.data.locale),now=new Date(),today=atStart(now),weekStart=startOfLocaleWeek(today,locale),since30=new Date(today.getTime()-29*day),since14=new Date(today.getTime()-13*day);
  const [summary,skills,activities,progress,goals,questCompletions,habitOccurrences,xp]=await Promise.all([
@@ -36,5 +38,5 @@ export async function GET(){
  const strongest=(skills.data||[])[0];
  const weekly={xp:xpRows.reduce((sum,item)=>sum+Number(item.amount),0),strongestSkill:strongest?.name||null,goals:new Set(progressRows.filter(item=>item.occurred_at>=weekStart.toISOString()).map(item=>item.goal_id)).size,activeDays:new Set(activityRows.filter(item=>item.occurred_at>=weekStart.toISOString()).map(item=>item.occurred_at.slice(0,10))).size,nextFocus:goalRows[0]?.title||null};
  const lifetimeXp=Number(summary.data.lifetime_xp);
- return NextResponse.json({data:{...summary.data,...levelProgress(lifetimeXp),activeDays30:activeDays,activities14:recent14,goalsMoved30:new Set(progressRows.map(item=>item.goal_id)).size,strongestSkills:skills.data,forecasts,daily,weekly}})
+ return NextResponse.json({data:{...summary.data,...levelProgress(lifetimeXp),advanced,activeDays30:advanced?activeDays:null,activities14:advanced?recent14:null,goalsMoved30:advanced?new Set(progressRows.map(item=>item.goal_id)).size:null,strongestSkills:advanced?skills.data:[],forecasts:advanced?forecasts:[],daily,weekly}})
 }

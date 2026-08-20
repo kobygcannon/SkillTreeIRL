@@ -46,3 +46,13 @@ Scheduled jobs call the three `/api/internal/jobs/*` routes with `Authorization:
 Operational probes are available at `/health/live` and `/health/ready`. Backups, point-in-time recovery, alerting, custom domains, provider credentials, and production secrets must be enabled in the selected Supabase and hosting projects before launch.
 
 The environment separation, monitoring, backup/restore test, deployment, incident, and rollback procedures are in [Docs/PRODUCTION_OPERATIONS.md](Docs/PRODUCTION_OPERATIONS.md). A production launch is intentionally blocked until external monitoring, backups, a dated restore drill, staging, and rollback evidence are configured and verified.
+
+## Documentation map
+
+- [Product and user guide](Docs/PRODUCT_AND_USER_GUIDE.md): the daily loop, every major feature, privacy behaviour, and what makes SkillTree IRL distinct.
+- [Product strategy and monetisation](Docs/PRODUCT_AND_MONETIZATION.md): target users, retention loop, Free/Pro boundary, pricing, and product guardrails.
+- [Architecture and data flows](Docs/ARCHITECTURE.md): application layers, authoritative mutations, data ownership, integrations, jobs, and failure handling.
+- [API reference](Docs/API_REFERENCE.md): public application endpoints, authentication expectations, retry rules, and error conventions.
+- [Provider setup](Docs/PROVIDER_SETUP.md): Vercel, Supabase, Sentry, Stripe, GitHub, email, push, OAuth, backups, domains, and account ownership.
+- [Production operations](Docs/PRODUCTION_OPERATIONS.md): deployment, monitoring, backups, restore, rollback, and incident response.
+- [Launch gate](Docs/PRODUCTION_LAUNCH_GATE.md): evidence-backed production-readiness status and unresolved launch blockers.
