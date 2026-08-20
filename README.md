@@ -51,6 +51,7 @@ The environment separation, monitoring, backup/restore test, deployment, inciden
 
 - [Product and user guide](Docs/PRODUCT_AND_USER_GUIDE.md): the daily loop, every major feature, privacy behaviour, and what makes SkillTree IRL distinct.
 - [Product strategy and monetisation](Docs/PRODUCT_AND_MONETIZATION.md): target users, retention loop, Free/Pro boundary, pricing, and product guardrails.
+- [Company workspaces](Docs/COMPANY_WORKSPACES.md): tier-specific onboarding, roles, privacy isolation, daily team use, seat billing, cancellation, responsive behaviour, and operations.
 - [Architecture and data flows](Docs/ARCHITECTURE.md): application layers, authoritative mutations, data ownership, integrations, jobs, and failure handling.
 - [API reference](Docs/API_REFERENCE.md): public application endpoints, authentication expectations, retry rules, and error conventions.
 - [Provider setup](Docs/PROVIDER_SETUP.md): Vercel, Supabase, Sentry, Stripe, GitHub, email, push, OAuth, backups, domains, and account ownership.

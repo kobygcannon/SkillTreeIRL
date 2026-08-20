@@ -1,1 +1,266 @@
-.onboard{min-height:100vh;background:#f8f8fb;color:#202027}.onboard header{height:76px;background:white;border-bottom:1px solid #e7e6ec;display:flex;align-items:center;padding:0 36px}.onboard-logo{display:flex;align-items:center;gap:7px;font-size:18px;font-weight:800;flex:1}.onboard-logo span{width:31px;height:31px;border-radius:9px;background:#7465e8;color:white;display:grid;place-items:center}.onboard-logo svg{width:17px}.onboard-logo em{font-style:normal;font-size:8px;color:#7465e8;background:#eeecff;padding:3px 5px;border-radius:4px}.steps{display:flex;gap:6px}.steps i{width:35px;height:4px;background:#e4e2e9;border-radius:5px}.steps i.active{background:#7465e8}.onboard header>button{flex:1;text-align:right;border:0;background:transparent;color:#74727e;font-size:11px}.onboard section{display:grid;place-items:start center;padding:55px 20px}.onboard-card{width:min(720px,100%);text-align:center}.onboard-card.narrow{width:min(540px,100%)}.onboard-icon{width:62px;height:62px;margin:auto;background:#eeecff;color:#7465e8;border-radius:20px;display:grid;place-items:center}.kicker{font-size:9px!important;font-weight:800;letter-spacing:1.4px;color:#7465e8!important;margin-top:20px!important}.onboard-card h1{font-size:34px;letter-spacing:-1px;margin:9px 0}.onboard-card>p{font-size:12px;color:#74727e;line-height:1.6}.category-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:28px 0}.category-grid button,.templates button{height:50px;border:1px solid #e1dfe7;background:white;border-radius:10px;color:#3f3d46;text-align:left;padding:0 15px;font-weight:700;font-size:12px;position:relative}.category-grid button.selected,.templates button.selected{border-color:#7465e8;background:#f2f0ff;color:#6657d9}.category-grid svg{position:absolute;right:12px;width:15px}.continue{height:45px;border:0;border-radius:9px;background:#7465e8;color:white;font-weight:800;padding:0 20px;display:flex;align-items:center;gap:8px;margin:20px auto}.continue:disabled{opacity:.45}.continue svg{width:17px}.back{border:0;background:transparent;display:flex;gap:5px;align-items:center;color:#74727e;font-size:11px;margin-bottom:25px}.back svg{width:15px}.templates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:25px 0}.templates button{display:flex;justify-content:space-between;align-items:center}.templates svg{width:14px}.custom,.onboard-card.narrow label{display:block;text-align:left;font-size:10px;font-weight:800;color:#55525d}.custom input,.onboard-card input,.onboard-card select{display:block;width:100%;height:45px;border:1px solid #dedce5;background:white;border-radius:9px;padding:0 11px;margin-top:7px;outline:none}.custom input:focus,.onboard-card input:focus,.onboard-card select:focus{border-color:#7465e8;box-shadow:0 0 0 3px #7465e818}.target-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.goal-preview{margin:20px 0 5px;background:#292631;color:white;border-radius:12px;padding:20px;text-align:left;display:flex;flex-direction:column}.goal-preview small{font-size:8px;color:#a59cf6;letter-spacing:1px}.goal-preview b{font-size:15px;margin:8px 0}.goal-preview span{font-size:9px;color:#aaa6b3}.onboard-error{font-size:10px;background:#fff0f0;color:#a54242;border-radius:8px;padding:10px;margin-top:12px}@media(max-width:600px){.onboard header{padding:0 15px}.steps{display:none}.onboard header>button{white-space:nowrap}.onboard section{padding:35px 15px}.onboard-card h1{font-size:27px}.category-grid,.templates{grid-template-columns:1fr}.target-row{grid-template-columns:1fr}}
+.onboard {
+  min-height: 100vh;
+  background: #f8f8fb;
+  color: #202027;
+}
+.onboard header {
+  height: 76px;
+  background: white;
+  border-bottom: 1px solid #e7e6ec;
+  display: flex;
+  align-items: center;
+  padding: 0 36px;
+}
+.onboard-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 18px;
+  font-weight: 800;
+  flex: 1;
+}
+.onboard-logo span {
+  width: 31px;
+  height: 31px;
+  border-radius: 9px;
+  background: #7465e8;
+  color: white;
+  display: grid;
+  place-items: center;
+}
+.onboard-logo svg {
+  width: 17px;
+}
+.onboard-logo em {
+  font-style: normal;
+  font-size: 8px;
+  color: #7465e8;
+  background: #eeecff;
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+.steps {
+  display: flex;
+  gap: 6px;
+}
+.steps i {
+  width: 35px;
+  height: 4px;
+  background: #e4e2e9;
+  border-radius: 5px;
+}
+.steps i.active {
+  background: #7465e8;
+}
+.onboard header > button {
+  flex: 1;
+  text-align: right;
+  border: 0;
+  background: transparent;
+  color: #74727e;
+  font-size: 11px;
+}
+.onboard section {
+  display: grid;
+  place-items: start center;
+  padding: 55px 20px;
+}
+.onboard-card {
+  width: min(720px, 100%);
+  text-align: center;
+}
+.onboard-card.narrow {
+  width: min(540px, 100%);
+}
+.onboard-icon {
+  width: 62px;
+  height: 62px;
+  margin: auto;
+  background: #eeecff;
+  color: #7465e8;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+}
+.kicker {
+  font-size: 9px !important;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: #7465e8 !important;
+  margin-top: 20px !important;
+}
+.onboard-card h1 {
+  font-size: 34px;
+  letter-spacing: -1px;
+  margin: 9px 0;
+}
+.onboard-card > p {
+  font-size: 12px;
+  color: #74727e;
+  line-height: 1.6;
+}
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 28px 0;
+}
+.category-grid button,
+.templates button {
+  height: 50px;
+  border: 1px solid #e1dfe7;
+  background: white;
+  border-radius: 10px;
+  color: #3f3d46;
+  text-align: left;
+  padding: 0 15px;
+  font-weight: 700;
+  font-size: 12px;
+  position: relative;
+}
+.category-grid button.selected,
+.templates button.selected {
+  border-color: #7465e8;
+  background: #f2f0ff;
+  color: #6657d9;
+}
+.category-grid svg {
+  position: absolute;
+  right: 12px;
+  width: 15px;
+}
+.continue {
+  height: 45px;
+  border: 0;
+  border-radius: 9px;
+  background: #7465e8;
+  color: white;
+  font-weight: 800;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px auto;
+}
+.continue:disabled {
+  opacity: 0.45;
+}
+.continue svg {
+  width: 17px;
+}
+.back {
+  border: 0;
+  background: transparent;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: #74727e;
+  font-size: 11px;
+  margin-bottom: 25px;
+}
+.back svg {
+  width: 15px;
+}
+.templates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 25px 0;
+}
+.templates button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.templates svg {
+  width: 14px;
+}
+.custom,
+.onboard-card.narrow label {
+  display: block;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 800;
+  color: #55525d;
+}
+.custom input,
+.onboard-card input,
+.onboard-card select {
+  display: block;
+  width: 100%;
+  height: 45px;
+  border: 1px solid #dedce5;
+  background: white;
+  border-radius: 9px;
+  padding: 0 11px;
+  margin-top: 7px;
+  outline: none;
+}
+.custom input:focus,
+.onboard-card input:focus,
+.onboard-card select:focus {
+  border-color: #7465e8;
+  box-shadow: 0 0 0 3px #7465e818;
+}
+.target-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.goal-preview {
+  margin: 20px 0 5px;
+  background: #292631;
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+.goal-preview small {
+  font-size: 8px;
+  color: #a59cf6;
+  letter-spacing: 1px;
+}
+.goal-preview b {
+  font-size: 15px;
+  margin: 8px 0;
+}
+.goal-preview span {
+  font-size: 9px;
+  color: #aaa6b3;
+}
+.onboard-error {
+  font-size: 10px;
+  background: #fff0f0;
+  color: #a54242;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 12px;
+}
+.company-onboarding{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;text-align:left;text-decoration:none;color:#39344f;background:#f3f1ff;border:1px solid #dcd7ff;border-radius:12px;padding:14px 16px;margin:20px 0}.company-onboarding>svg{color:#7465e8;width:20px}.company-onboarding span{display:flex;flex-direction:column;font-size:10px;color:#706b7d;line-height:1.5}.company-onboarding b{font-size:12px;color:#39344f}
+@media (max-width: 600px) {
+  .onboard header {
+    padding: 0 15px;
+  }
+  .steps {
+    display: none;
+  }
+  .onboard header > button {
+    white-space: nowrap;
+  }
+  .onboard section {
+    padding: 35px 15px;
+  }
+  .onboard-card h1 {
+    font-size: 27px;
+  }
+  .category-grid,
+  .templates {
+    grid-template-columns: 1fr;
+  }
+  .target-row {
+    grid-template-columns: 1fr;
+  }
+}
