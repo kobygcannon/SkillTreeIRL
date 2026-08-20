@@ -419,6 +419,21 @@
   padding: 14px;
   color: #743535;
 }
+.workspace-plan-lock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e5d49d;
+  border-radius: 11px;
+  background: #fff9e8;
+  padding: 14px;
+  color: #66572f;
+}
+.workspace-plan-lock span {
+  flex: 1;
+  font-size: 12px;
+}
 .workspace-danger summary {
   cursor: pointer;
   font-weight: 800;
@@ -488,6 +503,10 @@
   .member-list article > .member-actions {
     flex-basis: 100%;
     margin-left: 49px;
+  }
+  .workspace-plan-lock {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .workspace-shell > aside .workspace-name {
     display: none;

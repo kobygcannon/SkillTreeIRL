@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
+import { companyPlanError } from "@/domains/organizations/http";
 
 export async function PATCH(
   request: Request,
@@ -46,7 +47,7 @@ export async function PATCH(
           },
           { status: 403 },
         );
-      return failure(error);
+      return companyPlanError(error) || failure(error);
     }
     return NextResponse.json({ data: { updated: true } });
   } catch (error) {

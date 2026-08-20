@@ -3,6 +3,7 @@ import { Leaf, Sparkles } from "lucide-react";
 import { magicLink, oauth, signIn, signUp } from "./actions";
 import "./signin.css";
 import { safeReturnPath } from "@/lib/security/redirect";
+import { publicRegistrationReady } from "@/lib/registration";
 
 export default async function SignIn({
   searchParams,
@@ -15,6 +16,7 @@ export default async function SignIn({
   const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
   const appleEnabled = process.env.NEXT_PUBLIC_APPLE_AUTH_ENABLED === "true";
   const socialEnabled = googleEnabled || appleEnabled;
+  const registrationOpen = publicRegistrationReady();
 
   return (
     <main className="auth-page">
@@ -55,7 +57,9 @@ export default async function SignIn({
             <div className="auth-error">
               {params.error === "not_configured"
                 ? "Supabase credentials are not configured yet."
-                : decodeURIComponent(params.error)}
+                : params.error === "registration_closed"
+                  ? "Public registration is not open yet. The launch readiness checks are still being completed."
+                  : decodeURIComponent(params.error)}
             </div>
           )}
           {params.message && (
@@ -88,38 +92,52 @@ export default async function SignIn({
               </div>
             </>
           )}
-          <form action={signup ? signUp : signIn}>
-            {!signup && <input type="hidden" name="next" value={next} />}
-            {signup && (
+          {signup && !registrationOpen && (
+            <div className="auth-error" role="status">
+              Public registration is temporarily closed while legal identity,
+              billing and operational readiness are completed. Explore the demo
+              or return later; existing accounts can still sign in.
+            </div>
+          )}
+          {(!signup || registrationOpen) && (
+            <form action={signup ? signUp : signIn}>
+              {!signup && <input type="hidden" name="next" value={next} />}
+              {signup && (
+                <label>
+                  Display name
+                  <input
+                    name="displayName"
+                    required
+                    minLength={1}
+                    maxLength={80}
+                    autoComplete="name"
+                  />
+                </label>
+              )}
               <label>
-                Display name
+                Email
                 <input
-                  name="displayName"
+                  name="email"
+                  type="email"
                   required
-                  minLength={1}
-                  maxLength={80}
-                  autoComplete="name"
+                  autoComplete="email"
                 />
               </label>
-            )}
-            <label>
-              Email
-              <input name="email" type="email" required autoComplete="email" />
-            </label>
-            <label>
-              Password
-              <input
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                autoComplete={signup ? "new-password" : "current-password"}
-              />
-            </label>
-            <button className="auth-primary">
-              {signup ? "Build my SkillTree" : "Sign in"}
-            </button>
-          </form>
+              <label>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete={signup ? "new-password" : "current-password"}
+                />
+              </label>
+              <button className="auth-primary">
+                {signup ? "Build my SkillTree" : "Sign in"}
+              </button>
+            </form>
+          )}
           {!signup && (
             <>
               <p className="recovery-link">

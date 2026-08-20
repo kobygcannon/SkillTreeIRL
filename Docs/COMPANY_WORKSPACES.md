@@ -8,10 +8,12 @@ Company workspaces give a team shared direction without exposing an employee’s
 
 - **Individual Free** starts with one meaningful personal goal and remains useful indefinitely.
 - **Individual Pro (£7.99/month)** adds deeper analysis, imports, integrations, reusable templates, developer tools, unlimited active goals and expanded evidence storage. Checkout includes a 14-day trial.
-- **Company (£6/person/month, three-seat minimum)** starts with a separate workspace, owner identity, privacy explanation, first objective and member invitations. Checkout includes a 14-day trial.
+- **Company (£6/person/month, three-seat minimum)** starts with a separate workspace, owner identity, privacy explanation and a 14-day server-authoritative workspace trial. The trial begins once when the workspace is created; adding Stripe billing does not restart it.
 - An invited person sees the privacy boundary before accepting. The token expires after seven days and works only for the authenticated account with the invited email.
 
 The owner should create the first objective, assign it to specific people, invite a manager, and explain check-in visibility. Onboarding must never imply that personal data becomes available to an employer.
+
+During the trial, collaboration is fully usable. After expiry, existing company information stays readable and owners can still suspend access, manage billing or close the workspace, but invitations, acceptance, objectives, check-ins, role changes and reactivation require an active Company plan. The entitlement is enforced in database functions rather than hidden-button logic.
 
 ## Roles
 
@@ -36,7 +38,7 @@ Company activity intentionally does not award personal XP. This prevents an empl
 
 ## Billing lifecycle
 
-Company Checkout bills the greater of three seats or the current active-member count. Stripe metadata contains only the organization identifier. Webhooks reconcile subscription status, seats, renewal date, past-due state and cancel-at-period-end state.
+Company Checkout bills the greater of three seats or the current active-member count. Any remaining internal trial days are carried into Checkout, capped at the original 14 days. Stripe metadata contains only the organization identifier. Webhooks reconcile subscription status, seats, renewal date, past-due state and cancel-at-period-end state.
 
 Owners and admins use Stripe’s hosted portal for payment details, invoices, eligible plan/quantity changes and cancellation. The UI shows pending cancellation and does not treat a redirect as authoritative; webhooks are authoritative.
 

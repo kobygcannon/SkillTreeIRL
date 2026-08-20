@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
+import { companyPlanError } from "@/domains/organizations/http";
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -52,7 +53,7 @@ export async function POST(
           },
           { status: 422 },
         );
-      return failure(error);
+      return companyPlanError(error) || failure(error);
     }
     const { data, error: readError } = await auth.supabase
       .from("organization_objectives")

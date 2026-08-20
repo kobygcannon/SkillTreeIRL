@@ -22,6 +22,7 @@ type Objective = {
 };
 type Data = {
   currentUserId: string;
+  collaborationEnabled: boolean;
   organization: {
     id: string;
     name: string;
@@ -41,6 +42,8 @@ type Data = {
     status: string;
     seat_quantity: number;
     cancel_at_period_end: boolean;
+    current_period_end: string | null;
+    billingConnected: boolean;
   } | null;
 };
 export default function WorkspaceDashboard({ id }: { id: string }) {
@@ -249,6 +252,27 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
             {error}
           </p>
         )}
+        {!data.collaborationEnabled && (
+          <div className="workspace-plan-lock" role="status">
+            <b>Company trial ended</b>
+            <span>
+              Existing workspace data remains available. Start the Company plan
+              to invite people, create objectives, submit check-ins or
+              reactivate members.
+            </span>
+            {["owner", "admin"].includes(me?.role || "") ? (
+              <button
+                className="primary"
+                disabled={busy}
+                onClick={() => billing("checkout")}
+              >
+                Activate Company plan
+              </button>
+            ) : (
+              <small>Ask a workspace owner or admin to activate billing.</small>
+            )}
+          </div>
+        )}
         <div className="workspace-stats" id="overview">
           <article>
             <b>
@@ -311,7 +335,7 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
                       </span>
                     )}
                   </div>
-                  {myAssignment && (
+                  {myAssignment && data.collaborationEnabled && (
                     <details className="checkin">
                       <summary>
                         Update my progress · {myAssignment.current_value}
@@ -366,7 +390,7 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
               </div>
             )}
           </div>
-          {canManage && (
+          {canManage && data.collaborationEnabled && (
             <details className="workspace-form">
               <summary>
                 <Plus /> Create objective
@@ -443,6 +467,7 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
                       value={member.role}
                       disabled={
                         busy ||
+                        !data.collaborationEnabled ||
                         (me?.role === "admin" && member.role === "admin")
                       }
                       onChange={(event) =>
@@ -460,6 +485,8 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
                       className="outline"
                       disabled={
                         busy ||
+                        (member.status !== "active" &&
+                          !data.collaborationEnabled) ||
                         (me?.role === "admin" && member.role === "admin")
                       }
                       onClick={() =>
@@ -478,61 +505,67 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
               </article>
             ))}
           </div>
-          {["owner", "admin"].includes(me?.role || "") && (
-            <form className="workspace-form inline" action={inviteMember}>
-              <label>
-                Email
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="person@company.com"
-                />
-              </label>
-              <label>
-                Role
-                <select name="role">
-                  <option value="member">Member</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </label>
-              <button className="primary" disabled={busy}>
-                Create secure invite
-              </button>
-              {invite && (
-                <div className="invite-result">
-                  <p role="status">{inviteStatus}</p>
-                  <label>
-                    Invitation link
-                    <input readOnly value={invite} />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(invite)}
-                    aria-label="Copy invitation"
-                  >
-                    <Copy />
-                  </button>
-                  <small>
-                    Expires in 7 days and only works for the invited email.
-                  </small>
-                </div>
-              )}
-            </form>
-          )}
+          {["owner", "admin"].includes(me?.role || "") &&
+            data.collaborationEnabled && (
+              <form className="workspace-form inline" action={inviteMember}>
+                <label>
+                  Email
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="person@company.com"
+                  />
+                </label>
+                <label>
+                  Role
+                  <select name="role">
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <button className="primary" disabled={busy}>
+                  Create secure invite
+                </button>
+                {invite && (
+                  <div className="invite-result">
+                    <p role="status">{inviteStatus}</p>
+                    <label>
+                      Invitation link
+                      <input readOnly value={invite} />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(invite)}
+                      aria-label="Copy invitation"
+                    >
+                      <Copy />
+                    </button>
+                    <small>
+                      Expires in 7 days and only works for the invited email.
+                    </small>
+                  </div>
+                )}
+              </form>
+            )}
         </section>
         <section className="workspace-section" id="billing">
           <p className="eyebrow">PLAN & BILLING</p>
           <h2>
             {data.subscription?.status === "active"
               ? "Company plan active"
-              : "Company plan"}
+              : data.collaborationEnabled
+                ? "Company trial active"
+                : "Company plan required"}
           </h2>
           <p>
             {data.subscription?.status === "active"
               ? `${data.subscription.seat_quantity} seats are billed for this workspace.`
-              : "Your workspace is ready for a company subscription. Checkout will only be offered when live company pricing is configured."}
+              : data.collaborationEnabled &&
+                  data.subscription?.current_period_end
+                ? `Your free company trial ends ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(new Date(data.subscription.current_period_end))}. Add billing now to keep collaboration active.`
+                : "Company collaboration is read-only until billing is activated. Personal SkillTrees remain unaffected."}
           </p>
           {data.subscription?.cancel_at_period_end && (
             <p className="form-error">
@@ -547,16 +580,18 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
               onClick={() =>
                 billing(
                   data.subscription?.status === "active" ||
-                    data.subscription?.status === "trialing"
+                    data.subscription?.billingConnected
                     ? "portal"
                     : "checkout",
                 )
               }
             >
               {data.subscription?.status === "active" ||
-              data.subscription?.status === "trialing"
+              data.subscription?.billingConnected
                 ? "Manage seats, payment or cancellation"
-                : "Start 14-day company trial"}
+                : data.collaborationEnabled
+                  ? "Add billing for after the trial"
+                  : "Activate Company plan"}
             </button>
           )}
           <Link className="outline-link" href="/pricing">

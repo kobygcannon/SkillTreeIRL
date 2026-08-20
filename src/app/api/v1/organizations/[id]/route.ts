@@ -44,7 +44,7 @@ export async function GET(
         auth.supabase
           .from("organization_subscriptions")
           .select(
-            "plan,status,seat_quantity,current_period_end,cancel_at_period_end",
+            "plan,status,seat_quantity,current_period_end,cancel_at_period_end,provider_customer_id,provider_subscription_id",
           )
           .eq("organization_id", id)
           .maybeSingle(),
@@ -56,6 +56,13 @@ export async function GET(
       assignments.error ||
       subscription.error;
     if (error) return failure(error);
+    const subscriptionData = subscription.data;
+    const collaborationEnabled = Boolean(
+      subscriptionData?.status === "active" ||
+      (subscriptionData?.status === "trialing" &&
+        subscriptionData.current_period_end &&
+        Date.parse(subscriptionData.current_period_end) > Date.now()),
+    );
     return NextResponse.json({
       data: {
         currentUserId: auth.userId,
@@ -63,7 +70,20 @@ export async function GET(
         members: members.data || [],
         objectives: objectives.data || [],
         assignments: assignments.data || [],
-        subscription: subscription.data,
+        collaborationEnabled,
+        subscription: subscriptionData
+          ? {
+              plan: subscriptionData.plan,
+              status: subscriptionData.status,
+              seat_quantity: subscriptionData.seat_quantity,
+              current_period_end: subscriptionData.current_period_end,
+              cancel_at_period_end: subscriptionData.cancel_at_period_end,
+              billingConnected: Boolean(
+                subscriptionData.provider_customer_id &&
+                subscriptionData.provider_subscription_id,
+              ),
+            }
+          : null,
       },
     });
   } catch (error) {

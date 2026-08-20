@@ -21,3 +21,4 @@ button{min-height:44px}.icon-btn,.menu-btn,.close-menu,.mobile-nav button{min-wi
 .quick-grid>a{display:flex;align-items:center;gap:10px;padding:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);text-align:left;text-decoration:none}.quick-grid>a.featured{grid-column:1/-1;background:#f3f1ff;border-color:#dcd7ff}.quick-grid>a>span{width:37px;height:37px;border-radius:10px;background:var(--surface2);color:var(--violet);display:grid;place-items:center}.quick-grid>a>div{flex:1}.quick-grid>a>svg{width:15px;color:var(--muted)}
 .quick-modal{max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
 .logo em{color:#594acb}
+.gentle{color:#705a2b}

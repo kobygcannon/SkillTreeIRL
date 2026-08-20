@@ -60,13 +60,26 @@ export async function POST(
         .eq("status", "active"),
       admin
         .from("organization_subscriptions")
-        .select("provider_customer_id,status")
+        .select(
+          "provider_customer_id,provider_subscription_id,status,current_period_end",
+        )
         .eq("organization_id", id)
         .single(),
       auth.supabase.auth.getUser(),
     ]);
     if (countError || subscriptionError || userError)
       throw countError || subscriptionError || userError;
+    if (subscription?.provider_subscription_id)
+      return NextResponse.json(
+        {
+          error: {
+            code: "SUBSCRIPTION_EXISTS",
+            message:
+              "This workspace already has Stripe billing. Use Manage billing instead.",
+          },
+        },
+        { status: 409 },
+      );
     let customer = subscription?.provider_customer_id || undefined;
     if (!customer) {
       const created = await stripe.customers.create(
@@ -86,7 +99,13 @@ export async function POST(
         .eq("organization_id", id);
       if (saved.error) throw saved.error;
     }
-    const quantity = Math.max(3, count || 1),
+    const remainingTrialDays = subscription?.current_period_end
+        ? Math.ceil(
+            (Date.parse(subscription.current_period_end) - Date.now()) /
+              86_400_000,
+          )
+        : 0,
+      quantity = Math.max(3, count || 1),
       session = await stripe.checkout.sessions.create(
         {
           mode: "subscription",
@@ -96,7 +115,9 @@ export async function POST(
           cancel_url: `${appUrl}/workspace/${id}?billing=cancelled`,
           allow_promotion_codes: true,
           subscription_data: {
-            trial_period_days: 14,
+            ...(remainingTrialDays >= 2
+              ? { trial_period_days: Math.min(14, remainingTrialDays) }
+              : {}),
             metadata: { skilltree_organization_id: id },
           },
           metadata: { skilltree_organization_id: id },

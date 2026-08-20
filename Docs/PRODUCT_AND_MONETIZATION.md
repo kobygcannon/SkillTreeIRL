@@ -132,6 +132,8 @@ Company is not Pro with extra seats. It adds a managed workspace, member roles, 
 
 Company onboarding therefore asks for workspace purpose and team structure, then guides the owner to create an objective, invite members and schedule the first check-in. Members receive a role-specific join path and see only the company context they are permitted to access.
 
+The Company workspace begins with one 14-day collaboration trial. Trial expiry makes shared workflows read-only without deleting company history or touching personal SkillTrees. Activating Stripe carries forward only the remaining trial period, preventing repeated or stacked trials. Paid value is therefore real coordination and controlled collaboration, not access to data already created.
+
 ## Ethical and commercial guardrails
 
 - Never sell XP, achievements, streak repair, ranking advantage, or essential privacy/security.

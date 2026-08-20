@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { safeReturnPath } from "@/lib/security/redirect";
+import { publicRegistrationReady } from "@/lib/registration";
 function callbackUrl(next: string) {
   const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     url = new URL("/auth/callback", base);
@@ -22,6 +23,8 @@ export async function signIn(formData: FormData) {
   redirect(next);
 }
 export async function signUp(formData: FormData) {
+  if (!publicRegistrationReady())
+    redirect("/sign-in?mode=signup&error=registration_closed");
   const supabase = await createClient();
   if (!supabase) redirect("/sign-in?error=not_configured");
   const email = String(formData.get("email") || "");
@@ -49,6 +52,7 @@ export async function magicLink(formData: FormData) {
     email,
     options: {
       emailRedirectTo: callbackUrl(next),
+      shouldCreateUser: false,
     },
   });
   if (error)

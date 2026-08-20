@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
 import { sendTransactionalEmails } from "@/lib/notifications/email";
 import { reportProductionError } from "@/lib/monitoring";
+import { companyPlanError } from "@/domains/organizations/http";
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -32,7 +33,7 @@ export async function POST(
         p_role: body.role || "member",
       },
     );
-    if (error) return failure(error);
+    if (error) return companyPlanError(error) || failure(error);
     const origin =
       process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const inviteUrl = `${origin}/workspace/join?token=${data}`;

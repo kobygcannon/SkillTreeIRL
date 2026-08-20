@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
+import { companyPlanError } from "@/domains/organizations/http";
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string; objectiveId: string }> },
@@ -50,7 +51,7 @@ export async function POST(
         p_visibility: body.visibility || "managers",
       },
     );
-    if (error) return failure(error);
+    if (error) return companyPlanError(error) || failure(error);
     return NextResponse.json({ data: { id: data } }, { status: 201 });
   } catch (error) {
     return failure(error);

@@ -8,6 +8,8 @@ Create protected GitHub environments named `staging` and `production`. Require a
 
 Configure every legal/controller variable documented in `.env.example` before public registration. In `APP_ENV=production`, `/health/ready` fails closed when the legal identity, controller, retention, lawful-basis, or error-monitoring configuration is missing.
 
+Production account creation also fails closed while required legal, billing, monitoring, email, push, request-protection or core service configuration is incomplete. Existing users can still sign in, and non-production environments remain available for verification. Passwordless sign-in must never create an unintended new account.
+
 Set `RATE_LIMIT_SECRET` to an independent random secret of at least 32 bytes. The request boundary enforces IP-and-session contextual limits for authentication, recovery, uploads, search, public links, integration callbacks, and API mutations. Cookie-authenticated mutations require a same-origin browser request; signed Stripe and internal worker callbacks are explicitly exempt from origin checks and remain protected by their own signature or bearer-secret verification. Production readiness fails closed if rate-limit storage or configuration is unavailable.
 
 ## Monitoring
