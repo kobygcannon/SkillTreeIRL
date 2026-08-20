@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { legalConfig } from "@/lib/legal";
+import { legalConfig, legalConfigurationReady } from "@/lib/legal";
 export default function Terms() {
+  const configured = legalConfigurationReady();
   return (
     <main className="onboard">
       <header>
@@ -10,13 +11,27 @@ export default function Terms() {
       <section>
         <article className="onboard-card narrow">
           <h1>Terms of service</h1>
+          {!configured && (
+            <p role="status" className="gentle">
+              Public registration and paid plans are not open. These draft terms
+              are published for launch review; the operator’s complete legal
+              identity and contact details must be configured before
+              registration opens.
+            </p>
+          )}
           <p>
-            These terms form an agreement between you and{" "}
-            <b>{legalConfig.entity}</b>, of {legalConfig.address}. SkillTree IRL
-            helps users record and reflect on personal progress. It is not
-            medical, financial, legal, or professional certification advice.
-            Users remain responsible for the accuracy and legality of content
-            they submit.
+            {configured ? (
+              <>
+                These terms form an agreement between you and{" "}
+                <b>{legalConfig.entity}</b>, of {legalConfig.address}.{" "}
+              </>
+            ) : (
+              <>These terms describe the intended SkillTree IRL service. </>
+            )}
+            SkillTree IRL helps users record and reflect on personal progress.
+            It is not medical, financial, legal, or professional certification
+            advice. Users remain responsible for the accuracy and legality of
+            content they submit.
           </p>
           <p>
             Do not abuse the service, attempt unauthorized access, upload
@@ -48,8 +63,12 @@ export default function Terms() {
           </p>
           <p>
             These terms are governed by {legalConfig.governingLaw}, subject to
-            mandatory rights that apply where you live. Questions or legal
-            notices may be sent to {legalConfig.contact}.
+            mandatory rights that apply where you live.{" "}
+            {configured && (
+              <>
+                Questions or legal notices may be sent to {legalConfig.contact}.
+              </>
+            )}
           </p>
           <p>
             <small>Last updated {legalConfig.updated}</small>

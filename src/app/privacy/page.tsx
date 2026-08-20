@@ -1,12 +1,22 @@
 import Link from "next/link";
-import { legalConfig } from "@/lib/legal";
+import { legalConfig, legalConfigurationReady } from "@/lib/legal";
 export default function Privacy() {
+  const configured = legalConfigurationReady();
   return (
     <Legal title="Privacy policy">
-      <p>
-        <b>{legalConfig.controller}</b>, of {legalConfig.address}, is the
-        controller for SkillTree IRL. Contact: {legalConfig.contact}.
-      </p>
+      {!configured && (
+        <p role="status" className="gentle">
+          Public registration is not open. This draft explains the intended
+          processing; complete controller and contact details must be configured
+          before registration opens.
+        </p>
+      )}
+      {configured && (
+        <p>
+          <b>{legalConfig.controller}</b>, of {legalConfig.address}, is the
+          controller for SkillTree IRL. Contact: {legalConfig.contact}.
+        </p>
+      )}
       <p>
         We process account, goal, activity, skill, evidence, social,
         integration, billing-status, support, and security data needed to
