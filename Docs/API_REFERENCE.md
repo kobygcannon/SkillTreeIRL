@@ -63,6 +63,16 @@ Important POST/PATCH operations accept or generate an idempotency key. Offline-c
 - `/api/admin/*` - audited role-restricted administration.
 - `/health/live`, `/health/ready` - unauthenticated operational probes.
 
+## Company workspaces
+
+- `GET|POST /api/v1/organizations`, `GET|PATCH /api/v1/organizations/:id` - list, create and configure isolated workspaces.
+- `POST /api/v1/organizations/:id/invitations` - create an email-bound, hashed, expiring invitation and attempt transactional email delivery.
+- `POST /api/v1/organization-invitations/accept` - accept only as the authenticated invited email.
+- `PATCH /api/v1/organizations/:id/members/:userId` - protected role changes and reversible member suspension.
+- `POST /api/v1/organizations/:id/objectives` - atomically create an objective and validated active-member assignments.
+- `POST /api/v1/organizations/:id/objectives/:objectiveId/checkins` - transactionally record a member check-in and assignment progress.
+- `POST /api/v1/organizations/:id/billing/checkout|portal` - role-protected Company subscription lifecycle.
+
 ## Security requirements for new endpoints
 
 Use the shared authenticated boundary, validate and cap every input, scope every read/write by owner or an audited admin policy, use an authoritative transaction for multi-row changes, revoke default function execution, make retries safe, avoid returning secrets/private content, and add unit/database/hostile/E2E evidence proportionate to risk.

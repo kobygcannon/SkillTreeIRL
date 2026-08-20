@@ -1,4 +1,10 @@
-export type ReminderEmail = { to: string; title: string; body: string };
+export type TransactionalEmail = {
+  to: string;
+  title: string;
+  body: string;
+  actionUrl?: string;
+  actionLabel?: string;
+};
 
 export function emailNotificationsReady() {
   return Boolean(
@@ -6,8 +12,8 @@ export function emailNotificationsReady() {
   );
 }
 
-export async function sendReminderEmails(
-  messages: ReminderEmail[],
+export async function sendTransactionalEmails(
+  messages: TransactionalEmail[],
   idempotencyKey: string,
 ) {
   if (!messages.length) return;
@@ -31,7 +37,7 @@ export async function sendReminderEmails(
         from,
         to: [message.to],
         subject: message.title,
-        text: `${message.body}\n\nOpen SkillTree IRL: ${appUrl || "https://skill-tree-irl.vercel.app/app"}`,
+        text: `${message.body}\n\n${message.actionLabel || "Open SkillTree IRL"}: ${message.actionUrl || appUrl || "https://skill-tree-irl.vercel.app/app"}`,
       })),
     ),
     signal: AbortSignal.timeout(10000),
@@ -42,4 +48,11 @@ export async function sendReminderEmails(
       `Email provider returned ${response.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`,
     );
   }
+}
+
+export async function sendReminderEmails(
+  messages: TransactionalEmail[],
+  idempotencyKey: string,
+) {
+  return sendTransactionalEmails(messages, idempotencyKey);
 }

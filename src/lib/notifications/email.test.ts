@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { emailNotificationsReady, sendReminderEmails } from "./email";
+import {
+  emailNotificationsReady,
+  sendReminderEmails,
+  sendTransactionalEmails,
+} from "./email";
 
 const original = {
   key: process.env.RESEND_API_KEY,
@@ -70,5 +74,30 @@ describe("email notifications", () => {
       subject: "Practice",
     });
     expect(body[0].text).toContain("https://skilltree.example");
+  });
+  it("uses a specific action link for transactional mail", async () => {
+    process.env.RESEND_API_KEY = "restricted-key";
+    process.env.NOTIFICATION_FROM_EMAIL = "SkillTree IRL <team@example.test>";
+    const request = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", request);
+    await sendTransactionalEmails(
+      [
+        {
+          to: "invitee@example.test",
+          title: "Join Example Studio",
+          body: "You have been invited.",
+          actionLabel: "Accept invitation",
+          actionUrl:
+            "https://skilltree.example/workspace/join?token=safe-token",
+        },
+      ],
+      "organization-invite/example",
+    );
+    const body = JSON.parse(request.mock.calls[0][1].body);
+    expect(body[0].text).toContain(
+      "Accept invitation: https://skilltree.example/workspace/join?token=safe-token",
+    );
   });
 });

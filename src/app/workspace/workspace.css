@@ -355,6 +355,21 @@
 .member-list small {
   color: #748078;
 }
+.member-list article > .member-actions {
+  flex: 0 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.member-actions select {
+  min-width: 105px;
+  height: 38px;
+  border: 1px solid #d5dcd7;
+  border-radius: 8px;
+  background: white;
+  color: #35433a;
+  padding: 0 9px;
+}
 .member-avatar {
   width: 38px;
   height: 38px;
@@ -434,6 +449,13 @@
   }
   .workspace-main > header {
     align-items: flex-start;
+  }
+  .member-list article {
+    flex-wrap: wrap;
+  }
+  .member-list article > .member-actions {
+    flex-basis: 100%;
+    margin-left: 49px;
   }
   .workspace-shell > aside .workspace-name {
     display: none;

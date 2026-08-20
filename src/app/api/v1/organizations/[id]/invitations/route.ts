@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticated, failure } from "@/domains/shared/http";
+import { sendTransactionalEmails } from "@/lib/notifications/email";
+import { reportProductionError } from "@/lib/monitoring";
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -33,11 +35,48 @@ export async function POST(
     if (error) return failure(error);
     const origin =
       process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const inviteUrl = `${origin}/workspace/join?token=${data}`;
+    const organization = await auth.supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", id)
+      .single();
+    if (organization.error) return failure(organization.error);
+    let emailDelivered = true;
+    try {
+      await sendTransactionalEmails(
+        [
+          {
+            to: body.email.trim().toLowerCase(),
+            title: `Join ${organization.data.name} on SkillTree IRL`,
+            body: `You have been invited as a ${body.role || "member"}. This private invitation expires in 7 days and only works with the invited email address.`,
+            actionLabel: "Accept invitation",
+            actionUrl: inviteUrl,
+          },
+        ],
+        `organization-invite/${id}/${Date.now()}`,
+      );
+    } catch (error) {
+      emailDelivered = false;
+      await reportProductionError({
+        message: "Organization invitation email failed",
+        source: "provider",
+        severity: "warning",
+        fingerprint: "organization-invitation-email-failed",
+        route: "/api/v1/organizations/[id]/invitations",
+        method: "POST",
+        context: {
+          organizationId: id,
+          providerError: error instanceof Error ? error.name : "unknown",
+        },
+      });
+    }
     return NextResponse.json(
       {
         data: {
-          inviteUrl: `${origin}/workspace/join?token=${data}`,
+          inviteUrl,
           expiresInDays: 7,
+          emailDelivered,
         },
       },
       { status: 201 },

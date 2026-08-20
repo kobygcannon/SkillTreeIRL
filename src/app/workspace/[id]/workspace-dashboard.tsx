@@ -48,7 +48,8 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
   const [data, setData] = useState<Data | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [invite, setInvite] = useState("");
+    [invite, setInvite] = useState(""),
+    [inviteStatus, setInviteStatus] = useState("");
   const load = useCallback(
     () =>
       fetch(`/api/v1/organizations/${id}`)
@@ -90,6 +91,7 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
   const inviteMember = async (form: FormData) => {
     setBusy(true);
     setInvite("");
+    setInviteStatus("");
     setError("");
     const response = await fetch(`/api/v1/organizations/${id}/invitations`, {
         method: "POST",
@@ -102,7 +104,14 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
       body = await response.json();
     if (!response.ok)
       setError(body.error?.message || "Invitation could not be created.");
-    else setInvite(body.data.inviteUrl);
+    else {
+      setInvite(body.data.inviteUrl);
+      setInviteStatus(
+        body.data.emailDelivered
+          ? "Invitation emailed. The secure link is also available below."
+          : "The invitation is valid, but email delivery failed. Copy and send the secure link manually.",
+      );
+    }
     setBusy(false);
   };
   const billing = async (kind: "checkout" | "portal") => {
@@ -143,6 +152,27 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
       body = await response.json();
     if (!response.ok)
       setError(body.error?.message || "Your check-in could not be saved.");
+    else await load();
+    setBusy(false);
+  };
+  const manageMember = async (
+    member: Member,
+    action: "change_role" | "suspend" | "reactivate",
+    role?: string,
+  ) => {
+    setBusy(true);
+    setError("");
+    const response = await fetch(
+        `/api/v1/organizations/${id}/members/${member.user_id}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action, role }),
+        },
+      ),
+      body = await response.json();
+    if (!response.ok)
+      setError(body.error?.message || "Membership could not be updated.");
     else await load();
     setBusy(false);
   };
@@ -205,7 +235,12 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
         )}
         <div className="workspace-stats" id="overview">
           <article>
-            <b>{data.members.length}</b>
+            <b>
+              {
+                data.members.filter((member) => member.status === "active")
+                  .length
+              }
+            </b>
             <span>active people</span>
           </article>
           <article>
@@ -380,9 +415,50 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
                 </span>
                 <div>
                   <b>{member.display_name}</b>
-                  <small>{member.job_title || "Team member"}</small>
+                  <small>
+                    {member.job_title || "Team member"} · {member.status}
+                  </small>
                 </div>
-                <span className="role-chip">{member.role}</span>
+                {member.role !== "owner" &&
+                ["owner", "admin"].includes(me?.role || "") ? (
+                  <div className="member-actions">
+                    <select
+                      aria-label={`Role for ${member.display_name}`}
+                      value={member.role}
+                      disabled={
+                        busy ||
+                        (me?.role === "admin" && member.role === "admin")
+                      }
+                      onChange={(event) =>
+                        manageMember(member, "change_role", event.target.value)
+                      }
+                    >
+                      <option value="member">Member</option>
+                      <option value="manager">Manager</option>
+                      {me?.role === "owner" && (
+                        <option value="admin">Admin</option>
+                      )}
+                    </select>
+                    <button
+                      type="button"
+                      className="outline"
+                      disabled={
+                        busy ||
+                        (me?.role === "admin" && member.role === "admin")
+                      }
+                      onClick={() =>
+                        manageMember(
+                          member,
+                          member.status === "active" ? "suspend" : "reactivate",
+                        )
+                      }
+                    >
+                      {member.status === "active" ? "Suspend" : "Reactivate"}
+                    </button>
+                  </div>
+                ) : (
+                  <span className="role-chip">{member.role}</span>
+                )}
               </article>
             ))}
           </div>
@@ -410,6 +486,7 @@ export default function WorkspaceDashboard({ id }: { id: string }) {
               </button>
               {invite && (
                 <div className="invite-result">
+                  <p role="status">{inviteStatus}</p>
                   <label>
                     Invitation link
                     <input readOnly value={invite} />

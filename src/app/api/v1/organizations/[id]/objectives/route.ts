@@ -27,34 +27,39 @@ export async function POST(
         },
         { status: 422 },
       );
-    const { data, error } = await auth.supabase
-      .from("organization_objectives")
-      .insert({
-        organization_id: id,
-        title: body.title.trim(),
-        description: body.description?.trim() || null,
-        measurement: body.measurement || "percentage",
-        target_value: body.targetValue ?? 100,
-        unit: body.unit?.trim() || "%",
-        due_at: body.dueAt || null,
-        created_by: auth.userId,
-      })
-      .select()
-      .single();
-    if (error) return failure(error);
-    const assignees = [...new Set(body.assignees || [])];
-    if (assignees.length) {
-      const assigned = await auth.supabase
-        .from("organization_assignments")
-        .insert(
-          assignees.map((user_id) => ({
-            objective_id: data.id,
-            user_id,
-            assigned_by: auth.userId,
-          })),
+    const { data: objectiveId, error } = await auth.supabase.rpc(
+      "create_organization_objective",
+      {
+        p_organization_id: id,
+        p_title: body.title.trim(),
+        p_description: body.description?.trim() || null,
+        p_measurement: body.measurement || "percentage",
+        p_target_value: body.targetValue ?? 100,
+        p_unit: body.unit?.trim() || "%",
+        p_due_at: body.dueAt || null,
+        p_assignees: [...new Set(body.assignees || [])],
+      },
+    );
+    if (error) {
+      if (error.message.includes("INVALID_ASSIGNEE"))
+        return NextResponse.json(
+          {
+            error: {
+              code: "INVALID_ASSIGNEE",
+              message:
+                "Objectives can only be assigned to active workspace members.",
+            },
+          },
+          { status: 422 },
         );
-      if (assigned.error) return failure(assigned.error);
+      return failure(error);
     }
+    const { data, error: readError } = await auth.supabase
+      .from("organization_objectives")
+      .select()
+      .eq("id", objectiveId)
+      .single();
+    if (readError) return failure(readError);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     return failure(error);

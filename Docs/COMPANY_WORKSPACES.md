@@ -24,9 +24,13 @@ The owner should create the first objective, assign it to specific people, invit
 
 Row-level security enforces membership and roles. Protected ownership, membership and invitation fields cannot be changed through broad table updates. Routes validate roles for clear errors, while the database remains the final boundary.
 
+Invitations are delivered through the configured transactional email provider. A secure copy-link fallback remains visible when delivery fails, and monitoring records the provider failure without receiving the invitee address. Owners can change non-owner roles, suspend access and reactivate members without deleting audit history. Admins cannot modify another admin or grant admin access, and the owner record is immutable.
+
 ## Daily use
 
 Managers create outcome-based objectives, explain why they matter, choose a due date and assign named members. Members enter a progress value and concise check-in, choosing manager-only or workspace visibility. Progress and history commit transactionally, preventing partial saves.
+
+Objective creation and every selected assignment also commit in one transaction. The database revalidates every assignee as an active member before writing anything, so an invalid or external user identifier rolls back the entire objective.
 
 Company activity intentionally does not award personal XP. This prevents an employer from turning private motivation into a leaderboard or buying progression.
 
