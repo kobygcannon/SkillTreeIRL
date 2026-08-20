@@ -3,84 +3,90 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
+  CalendarDays,
   Check,
+  CheckCircle2,
+  Clock3,
   Leaf,
   Sparkles,
-  Swords,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import { Cta, MarketingShell } from "./marketing";
 export default function MarketingHome() {
   return (
     <MarketingShell>
       <section className="marketing-hero">
-        <div>
+        <div className="marketing-hero-copy">
           <span className="marketing-kicker">
-            <Sparkles /> REAL PROGRESS, PERMANENTLY YOURS
+            <Sparkles /> YOUR GOALS, TURNED INTO DAILY PROGRESS
           </span>
           <h1>
-            Level up your
+            Know what to do next.
             <br />
-            <em>real life.</em>
+            <em>See how far you&apos;ve come.</em>
           </h1>
           <p>
-            Track goals, build skills, complete quests and watch your real-world
-            SkillTree grow over time.
+            SkillTree turns the life you want into one clear next action—then
+            keeps a permanent record of the goals, habits and skills you build.
           </p>
           <div>
-          <Link className="marketing-button" href="/sign-in?mode=signup">
-              Create your SkillTree <ArrowRight />
+            <Link className="marketing-button" href="/sign-in?mode=signup">
+              Start with one goal <ArrowRight />
             </Link>
-            <Link href="/demo">Explore the interactive demo</Link>
+            <Link href="/demo">Try the interactive demo</Link>
           </div>
           <small>
-            <Check /> Private by default <Check /> No XP for sale <Check /> Keep
-            your history
+            <Check /> Free daily planning <Check /> Private by default <Check />
+            No streak guilt
           </small>
         </div>
         <div
           className="marketing-preview"
-          aria-label="Synthetic SkillTree example"
+          aria-label="Example of the SkillTree daily experience"
         >
-          <div className="preview-character">
-            <Leaf />
-            <span>
-              <b>Level 18</b>
-              <small>Real-world character</small>
-            </span>
-          </div>
-          <div className="preview-branch">
-            <span>
-              <Target />
-            </span>
+          <div className="preview-topbar">
             <div>
-              <b>Build a meaningful product</b>
-              <small>68% · Focus goal</small>
-              <i style={{ width: "68%" }} />
+              <span className="preview-eyebrow">TODAY · TUESDAY 20 AUGUST</span>
+              <h2>Good morning, Maya</h2>
+              <p>One useful action is enough to move today forward.</p>
             </div>
+            <span className="preview-momentum"><TrendingUp /> 4 active days this week</span>
           </div>
-          <div className="preview-branch">
-            <span>
-              <Swords />
-            </span>
+          <div className="preview-grid">
+            <section className="preview-next">
+              <span className="preview-label"><Sparkles /> YOUR NEXT BEST MOVE</span>
+              <div className="preview-task">
+                <span><CheckCircle2 /></span>
+                <div>
+                  <small>TRAIN FOR MY FIRST 10K</small>
+                  <b>Complete an easy 20-minute run</b>
+                  <p><Clock3 /> About 20 min <span>+ Running skill</span></p>
+                </div>
+              </div>
+              <button type="button" tabIndex={-1}>Mark complete</button>
+              <p className="preview-reassurance">Missed yesterday? Nothing resets. Just continue.</p>
+            </section>
+            <section className="preview-progress">
+              <span className="preview-label"><Target /> YOUR FOCUS GOAL</span>
+              <h3>Run 10K without stopping</h3>
+              <div className="preview-progress-row">
+                <strong>12</strong><span>of 30 training runs</span><b>40%</b>
+              </div>
+              <i><span style={{ width: "40%" }} /></i>
+              <div className="preview-proof">
+                <span><CalendarDays /><b>4</b><small>actions this week</small></span>
+                <span><Clock3 /><b>2h 15m</b><small>time invested</small></span>
+              </div>
+              <p><TrendingUp /> Your running consistency is improving</p>
+            </section>
+          </div>
+          <div className="preview-footer">
             <div>
-              <b>Polish the onboarding flow</b>
-              <small>Next quest · 50 XP</small>
+              <Leaf />
+              <span><b>Your SkillTree grows from work you actually do.</b><small>Running, endurance and consistency keep developing—even when your goals change.</small></span>
             </div>
-          </div>
-          <div className="preview-stats">
-            <span>
-              <b>16</b>
-              <small>Skills</small>
-            </span>
-            <span>
-              <b>74</b>
-              <small>Actions</small>
-            </span>
-            <span>
-              <b>12</b>
-              <small>Achievements</small>
-            </span>
+            <Link href="/demo">See the full app <ArrowRight /></Link>
           </div>
         </div>
       </section>

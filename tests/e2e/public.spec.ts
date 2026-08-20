@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 
 test("marketing, signup handoff, and public education are usable", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Level up your real life." })).toBeVisible();
-  await page.getByRole("link", { name: "Create your SkillTree" }).first().click();
+  await expect(page.getByRole("heading", { name: "Know what to do next. See how far you've come." })).toBeVisible();
+  await page.getByRole("link", { name: "Start with one goal" }).first().click();
   await expect(page).toHaveURL(/\/sign-in\?mode=signup$/);
   await expect(page.getByRole("heading", { name: "Create your SkillTree" })).toBeVisible();
   await page.goto("/learn/goal-tracking");
