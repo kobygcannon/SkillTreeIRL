@@ -7,11 +7,11 @@ This record maps the specification's production-readiness gate to current author
 ## Application and security gates — verified
 
 - Authentication works end-to-end: authenticated Playwright journey covers registration, onboarding, protected routing, and deletion sign-out.
-- Authorization and RLS are hostile-tested: `supabase/tests/authorization_rls.test.sql` and the full clean-database suite pass.
-- Goal measurement types, revisions, state changes, progress, reversals, skills, XP, quests, habits, achievements, evidence, entitlements, Stripe idempotency, exports, deletion, privacy defaults, notification preferences, offline idempotency, and large-account behavior are exercised by the 130-assertion database suite plus the authenticated browser journey.
+- Authorization and RLS have previously passed hostile tests in `supabase/tests/authorization_rls.test.sql`. The new company-workspace head adds further pgTAP coverage, but the full clean-database suite must be rerun after the four pending company migrations are installed.
+- Goal measurement types, revisions, state changes, progress, reversals, skills, XP, quests, habits, achievements, evidence, entitlements, Stripe idempotency, exports, deletion, privacy defaults, notification preferences, offline idempotency, and large-account behavior are covered by the database suite and authenticated browser journey. The company suite now declares 32 additional assertions for workspace isolation, roles, membership, objectives, check-ins, trials, closure, and deletion preconditions; it remains unverified against the provider head until the pending migrations are applied.
 - Responsive/public/accessibility behavior: seven Playwright journeys pass, including authenticated and public axe checks; static accessibility tests also pass.
 - Clean database: the last isolated reset applied migrations through `20260813040000_account_deletion_immutable_ledgers.sql` and database lint reported no warnings. Later migrations through `20260813230000_complete_focus_sessions.sql` are installed in both provider environments and have passed targeted privilege and transactional rollback verification, but the full clean-reset suite for the new head remains pending while GitHub Actions billing prevents jobs from starting.
-- Application quality: 94 unit/static tests, ESLint, strict TypeScript, and the optimized 95-route Next.js build pass.
+- Application quality at local commit `6c2e2e2`: 101 unit/static tests across 20 files, ESLint, strict TypeScript, and the optimized 99-route Next.js build pass. The complete seven-test public Playwright suite, including automated accessibility checks, passed again on 20 August 2026.
 - No mock authentication or client-only authorization is used by the signed-in product. `/demo` is intentionally read-only and routes attempted mutations to signup.
 - Legal, privacy, security, and support surfaces exist. Production readiness fails closed unless controller, monitoring, email, web-push, and request-protection configuration are complete.
 - Multi-channel reminders support in-app, web push, and idempotent Resend email batches; API validation protects timezone, recurrence, quiet-hours, and channel preferences. Provider outages are isolated and reported.
@@ -37,6 +37,17 @@ These require inspected provider state. They must remain unchecked until dated e
 - [ ] A provider backup has been restored to an isolated recovery project and validated for RPO, RTO, row counts, hostile RLS, owner/cross-owner evidence access, and cleanup.
 - [ ] Production promotion has passed human approval and exact-release live/ready/sign-in probes.
 - [ ] A non-production rollback rehearsal has promoted a prior immutable deployment and passed release and readiness verification.
+
+## Undeployed database head
+
+The following reviewed migrations exist locally and must be applied in order to staging and verified before they are applied to production. Application commit `6c2e2e2` must not be deployed ahead of this schema head.
+
+1. `20260820120000_company_objective_transactions.sql`
+2. `20260820130000_company_member_management.sql`
+3. `20260820140000_company_workspace_closure.sql`
+4. `20260820150000_company_trial_entitlements.sql`
+
+Required evidence after each environment is updated: migration-history presence, expected function signatures and grants, transactional probes, the Supabase Security Advisor, and the Supabase Performance Advisor. On 20 August 2026 the Codex Supabase connection could identify both projects but was denied database-management permission, while the signed-in Edge control connection timed out. No migration has been claimed as applied on that basis.
 
 Do not mark SkillTree IRL production-ready or open public registration until every provider-backed item above has dated evidence.
 
