@@ -82,7 +82,7 @@ export default function Page() {
             </ul>
             <Link
               className="marketing-button"
-              href={plan.name === "Company" ? "/workspace/new" : "/start-free"}
+              href={plan.name === "Company" ? "/workspace/new" : "/sign-in?mode=signup"}
             >
               {plan.name === "Free"
                 ? "Start free"

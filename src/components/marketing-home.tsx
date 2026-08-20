@@ -1,2 +1,163 @@
-import Link from "next/link";import {ArrowRight,BarChart3,BookOpen,Check,Leaf,Sparkles,Swords,Target} from "lucide-react";import {Cta,MarketingShell} from "./marketing";
-export default function MarketingHome(){return <MarketingShell><section className="marketing-hero"><div><span className="marketing-kicker"><Sparkles/> REAL PROGRESS, PERMANENTLY YOURS</span><h1>Level up your<br/><em>real life.</em></h1><p>Track goals, build skills, complete quests and watch your real-world SkillTree grow over time.</p><div><Link className="marketing-button" href="/start-free">Create your SkillTree <ArrowRight/></Link><Link href="/demo">Explore the interactive demo</Link></div><small><Check/> Private by default <Check/> No XP for sale <Check/> Keep your history</small></div><div className="marketing-preview" aria-label="Synthetic SkillTree example"><div className="preview-character"><Leaf/><span><b>Level 18</b><small>Real-world character</small></span></div><div className="preview-branch"><span><Target/></span><div><b>Build a meaningful product</b><small>68% · Focus goal</small><i style={{width:'68%'}}/></div></div><div className="preview-branch"><span><Swords/></span><div><b>Polish the onboarding flow</b><small>Next quest · 50 XP</small></div></div><div className="preview-stats"><span><b>16</b><small>Skills</small></span><span><b>74</b><small>Actions</small></span><span><b>12</b><small>Achievements</small></span></div></div></section><section className="marketing-pillars"><article><Target/><h2>Goals can change</h2><p>Revise, pause, complete or archive objectives without erasing the story of how you grew.</p></article><article><Leaf/><h2>Skills stay with you</h2><p>Your permanent SkillTree develops through meaningful actions across every part of life.</p></article><article><BarChart3/><h2>Progress without punishment</h2><p>Momentum and insight help you continue. Missed days never take levels or XP away.</p></article></section><section className="marketing-story"><div><span>ONE COHESIVE DAILY LOOP</span><h2>Choose. Do. Record. Grow.</h2><p>SkillTree turns a big life direction into one useful next action, then keeps the durable record as goals evolve.</p><Link href="/features">See how the system works <ArrowRight/></Link></div><ol><li><b>Choose a focus</b><span>A goal that matters now</span></li><li><b>Complete a real action</b><span>A quest, habit, session or activity</span></li><li><b>Build lasting skills</b><span>Evidence-backed progression and insights</span></li></ol></section><section className="marketing-learn"><h2>Explore a better way to track growth</h2><div>{[['Goal tracking','/learn/goal-tracking'],['Skill development','/learn/skill-development'],['Real-life RPG','/learn/real-life-rpg'],['Personal skill trees','/learn/personal-skill-tree'],['Habit progression','/learn/habit-progression'],['Life goals','/learn/life-goals'],['Progress tracking','/learn/progress-tracking']].map(([label,href])=><Link href={href} key={href}><BookOpen/>{label}<ArrowRight/></Link>)}</div></section><Cta/></MarketingShell>}
+import Link from "next/link";
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpen,
+  Check,
+  Leaf,
+  Sparkles,
+  Swords,
+  Target,
+} from "lucide-react";
+import { Cta, MarketingShell } from "./marketing";
+export default function MarketingHome() {
+  return (
+    <MarketingShell>
+      <section className="marketing-hero">
+        <div>
+          <span className="marketing-kicker">
+            <Sparkles /> REAL PROGRESS, PERMANENTLY YOURS
+          </span>
+          <h1>
+            Level up your
+            <br />
+            <em>real life.</em>
+          </h1>
+          <p>
+            Track goals, build skills, complete quests and watch your real-world
+            SkillTree grow over time.
+          </p>
+          <div>
+          <Link className="marketing-button" href="/sign-in?mode=signup">
+              Create your SkillTree <ArrowRight />
+            </Link>
+            <Link href="/demo">Explore the interactive demo</Link>
+          </div>
+          <small>
+            <Check /> Private by default <Check /> No XP for sale <Check /> Keep
+            your history
+          </small>
+        </div>
+        <div
+          className="marketing-preview"
+          aria-label="Synthetic SkillTree example"
+        >
+          <div className="preview-character">
+            <Leaf />
+            <span>
+              <b>Level 18</b>
+              <small>Real-world character</small>
+            </span>
+          </div>
+          <div className="preview-branch">
+            <span>
+              <Target />
+            </span>
+            <div>
+              <b>Build a meaningful product</b>
+              <small>68% · Focus goal</small>
+              <i style={{ width: "68%" }} />
+            </div>
+          </div>
+          <div className="preview-branch">
+            <span>
+              <Swords />
+            </span>
+            <div>
+              <b>Polish the onboarding flow</b>
+              <small>Next quest · 50 XP</small>
+            </div>
+          </div>
+          <div className="preview-stats">
+            <span>
+              <b>16</b>
+              <small>Skills</small>
+            </span>
+            <span>
+              <b>74</b>
+              <small>Actions</small>
+            </span>
+            <span>
+              <b>12</b>
+              <small>Achievements</small>
+            </span>
+          </div>
+        </div>
+      </section>
+      <section className="marketing-pillars">
+        <article>
+          <Target />
+          <h2>Goals can change</h2>
+          <p>
+            Revise, pause, complete or archive objectives without erasing the
+            story of how you grew.
+          </p>
+        </article>
+        <article>
+          <Leaf />
+          <h2>Skills stay with you</h2>
+          <p>
+            Your permanent SkillTree develops through meaningful actions across
+            every part of life.
+          </p>
+        </article>
+        <article>
+          <BarChart3 />
+          <h2>Progress without punishment</h2>
+          <p>
+            Momentum and insight help you continue. Missed days never take
+            levels or XP away.
+          </p>
+        </article>
+      </section>
+      <section className="marketing-story">
+        <div>
+          <span>ONE COHESIVE DAILY LOOP</span>
+          <h2>Choose. Do. Record. Grow.</h2>
+          <p>
+            SkillTree turns a big life direction into one useful next action,
+            then keeps the durable record as goals evolve.
+          </p>
+          <Link href="/features">
+            See how the system works <ArrowRight />
+          </Link>
+        </div>
+        <ol>
+          <li>
+            <b>Choose a focus</b>
+            <span>A goal that matters now</span>
+          </li>
+          <li>
+            <b>Complete a real action</b>
+            <span>A quest, habit, session or activity</span>
+          </li>
+          <li>
+            <b>Build lasting skills</b>
+            <span>Evidence-backed progression and insights</span>
+          </li>
+        </ol>
+      </section>
+      <section className="marketing-learn">
+        <h2>Explore a better way to track growth</h2>
+        <div>
+          {[
+            ["Goal tracking", "/learn/goal-tracking"],
+            ["Skill development", "/learn/skill-development"],
+            ["Real-life RPG", "/learn/real-life-rpg"],
+            ["Personal skill trees", "/learn/personal-skill-tree"],
+            ["Habit progression", "/learn/habit-progression"],
+            ["Life goals", "/learn/life-goals"],
+            ["Progress tracking", "/learn/progress-tracking"],
+          ].map(([label, href]) => (
+            <Link href={href} key={href}>
+              <BookOpen />
+              {label}
+              <ArrowRight />
+            </Link>
+          ))}
+        </div>
+      </section>
+      <Cta />
+    </MarketingShell>
+  );
+}
